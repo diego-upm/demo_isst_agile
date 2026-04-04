@@ -1,0 +1,38 @@
+package com.agileict.modules.auth.controller;
+
+import com.agileict.modules.auth.dto.AuthResponse;
+import com.agileict.modules.auth.dto.LoginRequest;
+import com.agileict.modules.auth.dto.RegisterCompanyRequest;
+import com.agileict.modules.auth.dto.RegisterProfessionalRequest;
+import com.agileict.modules.auth.service.AuthService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+public class AuthController {
+
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping("/login")
+    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
+        return authService.login(request);
+    }
+
+    @PostMapping("/register-professional")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AuthResponse registerProfessional(@Valid @RequestBody RegisterProfessionalRequest request) {
+        return authService.registerProfessional(request);
+    }
+
+    @PostMapping("/register-company")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AuthResponse registerCompany(@Valid @RequestBody RegisterCompanyRequest request) {
+        return authService.registerCompany(request);
+    }
+}
