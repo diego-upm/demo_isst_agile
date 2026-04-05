@@ -7,6 +7,7 @@ import { RegisterProfessionalPage } from '../../features/auth/pages/RegisterProf
 import { RegisterRrhhPage } from '../../features/auth/pages/RegisterRrhhPage';
 import { RRHHDashboardPage } from '../../features/rrhh/pages/RRHHDashboardPage';
 import { ProcessesPage } from '../../features/rrhh/pages/ProcessesPage';
+import { CreateProcessPage } from '../../features/rrhh/pages/CreateProcessPage';
 import { SelectionPage } from '../../features/rrhh/pages/SelectionPage';
 import { SubscriptionPage } from '../../features/rrhh/pages/SubscriptionPage';
 import { ProfessionalDashboardPage } from '../../features/professional/pages/ProfessionalDashboardPage';
@@ -29,6 +30,7 @@ export function AppRouter() {
             <Route path={PATHS.rrhhDashboard} element={<RRHHDashboardPage />} />
             <Route path={PATHS.rrhhSubscription} element={<SubscriptionPage />} />
             <Route path={PATHS.rrhhProcesses} element={<ProcessesPage />} />
+            <Route path={PATHS.rrhhProcessesNew} element={<CreateProcessPage />} />
             <Route path={PATHS.rrhhSelection} element={<SelectionPage />} />
           </Route>
 

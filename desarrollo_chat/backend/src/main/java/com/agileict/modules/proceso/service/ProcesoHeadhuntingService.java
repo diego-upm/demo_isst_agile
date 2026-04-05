@@ -32,6 +32,7 @@ public class ProcesoHeadhuntingService {
         this.responsableRrhhRepository = responsableRrhhRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<ProcesoHeadhuntingResponse> findAll() {
         return procesoHeadhuntingRepository.findAll()
                 .stream()
@@ -39,6 +40,7 @@ public class ProcesoHeadhuntingService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<ProcesoHeadhuntingResponse> findByEmpresa(UUID empresaClienteId) {
         return procesoHeadhuntingRepository.findByEmpresaClienteId(empresaClienteId)
                 .stream()

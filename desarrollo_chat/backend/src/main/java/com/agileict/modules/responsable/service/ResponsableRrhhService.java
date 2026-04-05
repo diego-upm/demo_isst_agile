@@ -6,6 +6,7 @@ import com.agileict.modules.responsable.dto.ResponsableRrhhResponse;
 import com.agileict.modules.responsable.entity.ResponsableRrhh;
 import com.agileict.modules.responsable.repository.ResponsableRrhhRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ResponsableRrhhService {
@@ -16,6 +17,7 @@ public class ResponsableRrhhService {
         this.responsableRrhhRepository = responsableRrhhRepository;
     }
 
+    @Transactional(readOnly = true)
     public ResponsableRrhhResponse me() {
         String email = SecurityUtils.currentUserEmail();
         ResponsableRrhh responsable = responsableRrhhRepository.findByEmail(email)

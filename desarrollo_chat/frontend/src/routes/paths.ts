@@ -7,6 +7,7 @@ export const PATHS = {
   rrhhDashboard: '/rrhh',
   rrhhSubscription: '/rrhh/suscripcion',
   rrhhProcesses: '/rrhh/procesos',
+  rrhhProcessesNew: '/rrhh/procesos/nuevo',
   rrhhSelection: '/rrhh/seleccion',
   professionalDashboard: '/professional',
   professionalProfile: '/professional/perfil',
