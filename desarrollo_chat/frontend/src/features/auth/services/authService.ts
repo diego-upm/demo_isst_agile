@@ -1,57 +1,124 @@
-import type { AuthUser, LoginCredentials } from '../../../types/auth';
+import { apiClient } from '../../../services/apiClient';
+import type { AuthSession, AuthUser, LoginCredentials, UserRole } from '../../../types/auth';
 
-const STORAGE_KEY = 'agileict.auth.user';
+const STORAGE_KEY = 'agileict.auth.session';
 
-const DEMO_USERS: Record<string, AuthUser> = {
-  'rrhh@agileict.local': {
-    id: 'usr-rrhh-001',
-    fullName: 'Laura Martín',
-    email: 'rrhh@agileict.local',
-    role: 'RRHH',
-  },
-  'pro@agileict.local': {
-    id: 'usr-pro-001',
-    fullName: 'Diego Serrano',
-    email: 'pro@agileict.local',
-    role: 'PROFESSIONAL',
-  },
-};
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+interface LoginApiResponse {
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    roles: string[];
+  };
 }
 
-export async function loginWithMock(credentials: LoginCredentials): Promise<AuthUser> {
-  await delay(350);
-
-  const foundUser = DEMO_USERS[credentials.email.toLowerCase()];
-
-  if (!foundUser || foundUser.role !== credentials.role) {
-    throw new Error('Credenciales o rol no válidos.');
-  }
-
-  if (credentials.password !== 'demo1234') {
-    throw new Error('La contraseña de demo es demo1234.');
-  }
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(foundUser));
-  return foundUser;
+export interface RegisterProfessionalPayload {
+  nombre: string;
+  apellidos: string;
+  email: string;
+  password: string;
+  tecnologiasClave?: string;
+  aniosExperiencia?: number;
 }
 
-export function getStoredUser(): AuthUser | null {
+export interface RegisterRrhhPayload {
+  empresaNombre: string;
+  cif: string;
+  sector?: string;
+  responsableNombre: string;
+  responsableApellidos: string;
+  responsableEmail: string;
+  password: string;
+  cargo?: string;
+}
+
+function mapRole(roles: string[]): UserRole {
+  if (roles.includes('ROLE_RRHH')) {
+    return 'RRHH';
+  }
+
+  if (roles.includes('ROLE_PROFESSIONAL')) {
+    return 'PROFESSIONAL';
+  }
+
+  throw new Error('El usuario no tiene un rol permitido para esta aplicación.');
+}
+
+function buildDisplayName(email: string, role: UserRole): string {
+  const baseName = email.split('@')[0]?.trim();
+  if (baseName) {
+    return baseName;
+  }
+
+  return role === 'RRHH' ? 'Usuario RRHH' : 'Profesional';
+}
+
+function saveSession(session: AuthSession): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+}
+
+function toSession(response: LoginApiResponse): AuthSession {
+  const mappedRole = mapRole(response.user.roles);
+
+  const user: AuthUser = {
+    id: response.user.id,
+    email: response.user.email,
+    role: mappedRole,
+    fullName: buildDisplayName(response.user.email, mappedRole),
+  };
+
+  return {
+    user,
+    token: response.token,
+  };
+}
+
+export async function loginWithBackend(credentials: LoginCredentials): Promise<AuthSession> {
+  const response = await apiClient.post<LoginApiResponse>('/v1/auth/login', {
+    email: credentials.email,
+    password: credentials.password,
+  });
+
+  const session = toSession(response);
+  const mappedRole = session.user.role;
+
+  if (mappedRole !== credentials.role) {
+    throw new Error('El rol seleccionado no coincide con los permisos de tu cuenta.');
+  }
+
+  saveSession(session);
+  return session;
+}
+
+export async function registerProfessionalWithBackend(payload: RegisterProfessionalPayload): Promise<void> {
+  await apiClient.post<LoginApiResponse>('/v1/auth/register-professional', payload);
+}
+
+export async function registerRrhhWithBackend(payload: RegisterRrhhPayload): Promise<void> {
+  await apiClient.post<LoginApiResponse>('/v1/auth/register-company', payload);
+}
+
+export function getStoredSession(): AuthSession | null {
   const rawValue = localStorage.getItem(STORAGE_KEY);
   if (!rawValue) {
     return null;
   }
 
   try {
-    return JSON.parse(rawValue) as AuthUser;
+    const session = JSON.parse(rawValue) as Partial<AuthSession>;
+
+    if (!session.user || !session.token) {
+      clearStoredSession();
+      return null;
+    }
+
+    return session as AuthSession;
   } catch {
-    localStorage.removeItem(STORAGE_KEY);
+    clearStoredSession();
     return null;
   }
 }
 
-export function clearStoredUser(): void {
+export function clearStoredSession(): void {
   localStorage.removeItem(STORAGE_KEY);
 }

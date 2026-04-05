@@ -1,4 +1,6 @@
 import { PageHeader } from '../../../components/common/PageHeader';
+import { useNavigate } from 'react-router-dom';
+import { PATHS } from '../../../routes/paths';
 
 const mockProcesses = [
   {
@@ -16,6 +18,12 @@ const mockProcesses = [
 ];
 
 export function ProcessesPage() {
+  const navigate = useNavigate();
+
+  const handleOpenDetail = (processId: string) => {
+    navigate(`${PATHS.rrhhSelection}?processId=${encodeURIComponent(processId)}`);
+  };
+
   return (
     <section>
       <PageHeader
@@ -32,7 +40,11 @@ export function ProcessesPage() {
                 <h3>{process.title}</h3>
                 <p>{process.technologies}</p>
               </div>
-              <button type="button" className="button button-secondary">
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={() => handleOpenDetail(process.id)}
+              >
                 Abrir detalle
               </button>
             </div>

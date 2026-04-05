@@ -1,6 +1,9 @@
 export const PATHS = {
   home: '/',
   login: '/login',
+  registerChoice: '/registro',
+  registerProfessional: '/registro/profesional',
+  registerRrhh: '/registro/rrhh',
   rrhhDashboard: '/rrhh',
   rrhhSubscription: '/rrhh/suscripcion',
   rrhhProcesses: '/rrhh/procesos',

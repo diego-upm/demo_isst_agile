@@ -13,6 +13,8 @@ export function LoginPage() {
   const [role, setRole] = useState<UserRole>('RRHH');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const registrationSuccess =
+    (location.state as { registrationSuccess?: string } | null)?.registrationSuccess || '';
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -94,9 +96,14 @@ export function LoginPage() {
           </label>
 
           {error ? <div className="alert alert-error">{error}</div> : null}
+          {registrationSuccess ? <div className="alert alert-success">{registrationSuccess}</div> : null}
 
           <button type="submit" className="button" disabled={isSubmitting}>
             {isSubmitting ? 'Entrando...' : 'Iniciar sesión'}
+          </button>
+
+          <button type="button" className="button button-secondary" onClick={() => navigate(PATHS.registerChoice)}>
+            Crear usuario
           </button>
         </form>
       </div>

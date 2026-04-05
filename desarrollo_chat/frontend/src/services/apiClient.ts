@@ -48,4 +48,19 @@ export const apiClient = {
 
     return parseResponse<T>(response);
   },
+
+  async put<T>(path: string, body?: unknown, options: ApiClientOptions = {}): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'PUT',
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
+        ...options.headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    return parseResponse<T>(response);
+  },
 };

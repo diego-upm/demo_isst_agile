@@ -94,6 +94,13 @@ p {
   width: min(100%, 520px);
 }
 
+.return-actions {
+  width: min(100%, 520px);
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
 .app-shell {
   min-height: 100vh;
   display: grid;

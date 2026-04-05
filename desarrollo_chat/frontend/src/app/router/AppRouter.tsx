@@ -2,6 +2,9 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from '../../components/layout/AppLayout';
 import { ProtectedRoute } from '../../components/common/ProtectedRoute';
 import { LoginPage } from '../../features/auth/pages/LoginPage';
+import { RegisterChoicePage } from '../../features/auth/pages/RegisterChoicePage';
+import { RegisterProfessionalPage } from '../../features/auth/pages/RegisterProfessionalPage';
+import { RegisterRrhhPage } from '../../features/auth/pages/RegisterRrhhPage';
 import { RRHHDashboardPage } from '../../features/rrhh/pages/RRHHDashboardPage';
 import { ProcessesPage } from '../../features/rrhh/pages/ProcessesPage';
 import { SelectionPage } from '../../features/rrhh/pages/SelectionPage';
@@ -14,6 +17,9 @@ export function AppRouter() {
   return (
     <Routes>
       <Route path={PATHS.login} element={<LoginPage />} />
+      <Route path={PATHS.registerChoice} element={<RegisterChoicePage />} />
+      <Route path={PATHS.registerProfessional} element={<RegisterProfessionalPage />} />
+      <Route path={PATHS.registerRrhh} element={<RegisterRrhhPage />} />
 
       <Route element={<ProtectedRoute allowedRoles={['RRHH', 'PROFESSIONAL']} />}>
         <Route element={<AppLayout />}>

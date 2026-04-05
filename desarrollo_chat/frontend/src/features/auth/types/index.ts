@@ -1,1 +1,1 @@
-export type { AuthUser, LoginCredentials, UserRole, AuthContextValue } from '../../../types/auth';
+export type { AuthUser, AuthSession, LoginCredentials, UserRole, AuthContextValue } from '../../../types/auth';
