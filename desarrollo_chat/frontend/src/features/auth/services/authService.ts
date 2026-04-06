@@ -22,14 +22,26 @@ export interface RegisterProfessionalPayload {
 }
 
 export interface RegisterRrhhPayload {
-  empresaNombre: string;
-  cif: string;
-  sector?: string;
+  empresaClienteId: string;
   responsableNombre: string;
   responsableApellidos: string;
   responsableEmail: string;
   password: string;
   cargo?: string;
+}
+
+export interface CompanyOption {
+  id: string;
+  nombre: string;
+  cif: string;
+  sector?: string | null;
+  activa: boolean;
+}
+
+export interface CreateCompanyPayload {
+  nombre: string;
+  cif: string;
+  sector?: string;
 }
 
 function mapRole(roles: string[]): UserRole {
@@ -80,12 +92,6 @@ export async function loginWithBackend(credentials: LoginCredentials): Promise<A
   });
 
   const session = toSession(response);
-  const mappedRole = session.user.role;
-
-  if (mappedRole !== credentials.role) {
-    throw new Error('El rol seleccionado no coincide con los permisos de tu cuenta.');
-  }
-
   saveSession(session);
   return session;
 }
@@ -95,7 +101,15 @@ export async function registerProfessionalWithBackend(payload: RegisterProfessio
 }
 
 export async function registerRrhhWithBackend(payload: RegisterRrhhPayload): Promise<void> {
-  await apiClient.post<LoginApiResponse>('/v1/auth/register-company', payload);
+  await apiClient.post<LoginApiResponse>('/v1/auth/register-rrhh', payload);
+}
+
+export async function listCompaniesWithBackend(): Promise<CompanyOption[]> {
+  return apiClient.get<CompanyOption[]>('/v1/auth/companies');
+}
+
+export async function createCompanyWithBackend(payload: CreateCompanyPayload): Promise<CompanyOption> {
+  return apiClient.post<CompanyOption>('/v1/auth/companies', payload);
 }
 
 export function getStoredSession(): AuthSession | null {

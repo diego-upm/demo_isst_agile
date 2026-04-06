@@ -63,4 +63,18 @@ export const apiClient = {
 
     return parseResponse<T>(response);
   },
+
+  async delete<T>(path: string, options: ApiClientOptions = {}): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'DELETE',
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
+        ...options.headers,
+      },
+    });
+
+    return parseResponse<T>(response);
+  },
 };

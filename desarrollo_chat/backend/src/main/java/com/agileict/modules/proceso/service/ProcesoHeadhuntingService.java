@@ -1,6 +1,8 @@
 package com.agileict.modules.proceso.service;
 
+import com.agileict.common.exception.BusinessException;
 import com.agileict.common.exception.ResourceNotFoundException;
+import com.agileict.common.util.SecurityUtils;
 import com.agileict.modules.empresa.entity.EmpresaCliente;
 import com.agileict.modules.empresa.repository.EmpresaClienteRepository;
 import com.agileict.modules.proceso.dto.CreateProcesoRequest;
@@ -82,6 +84,27 @@ public class ProcesoHeadhuntingService {
         }
 
         return toResponse(procesoHeadhuntingRepository.save(proceso));
+    }
+
+    @Transactional
+    public void delete(UUID procesoId) {
+        ProcesoHeadhunting proceso = procesoHeadhuntingRepository.findById(procesoId)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el proceso indicado."));
+
+        if (!SecurityUtils.currentUserHasRole("ROLE_ADMIN")) {
+            String email = SecurityUtils.currentUserEmail();
+            ResponsableRrhh responsable = responsableRrhhRepository.findByEmail(email)
+                    .orElseThrow(() -> new BusinessException("No tienes permisos para eliminar este proceso."));
+
+            UUID empresaResponsable = responsable.getEmpresaCliente().getId();
+            UUID empresaProceso = proceso.getEmpresaCliente().getId();
+
+            if (!empresaResponsable.equals(empresaProceso)) {
+                throw new BusinessException("No tienes permisos para eliminar este proceso.");
+            }
+        }
+
+        procesoHeadhuntingRepository.delete(proceso);
     }
 
     private ProcesoHeadhuntingResponse toResponse(ProcesoHeadhunting proceso) {

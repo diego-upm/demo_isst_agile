@@ -16,6 +16,7 @@ Esta carpeta deja preparada la base de datos para crecer por fases.
 - `proceso_headhunting`
 - `puesto_tic`
 - `profesional_senior`
+- `lista_candidatos`
 
 ## Tablas de soporte incluidas
 
@@ -29,7 +30,7 @@ Esta carpeta deja preparada la base de datos para crecer por fases.
 - Los datos demo iniciales se crean desde Spring Boot en perfiles `dev` y `docker`.
 - Más adelante puedes añadir aquí nuevas migraciones para:
   - tabla intermedia proceso-profesional
-  - visibilidad/autorizaciones
+  - visibilidad/autorizaciones por proceso
   - auditoría
   - notificaciones
   - estados e histórico

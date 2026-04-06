@@ -33,4 +33,10 @@ public class ProcesoHeadhuntingController {
     public ProcesoHeadhuntingResponse create(@Valid @RequestBody CreateProcesoRequest request) {
         return procesoHeadhuntingService.create(request);
     }
+
+    @DeleteMapping("/{procesoId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable UUID procesoId) {
+        procesoHeadhuntingService.delete(procesoId);
+    }
 }

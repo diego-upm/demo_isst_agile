@@ -2,13 +2,16 @@ package com.agileict.modules.auth.service;
 
 import com.agileict.common.exception.BusinessException;
 import com.agileict.modules.auth.dto.AuthResponse;
+import com.agileict.modules.auth.dto.CreateCompanyRequest;
 import com.agileict.modules.auth.dto.LoginRequest;
 import com.agileict.modules.auth.dto.RegisterCompanyRequest;
 import com.agileict.modules.auth.dto.RegisterProfessionalRequest;
+import com.agileict.modules.auth.dto.RegisterRrhhRequest;
 import com.agileict.modules.auth.entity.Role;
 import com.agileict.modules.auth.entity.UserAccount;
 import com.agileict.modules.auth.repository.RoleRepository;
 import com.agileict.modules.auth.repository.UserAccountRepository;
+import com.agileict.modules.empresa.dto.EmpresaClienteResponse;
 import com.agileict.modules.empresa.entity.EmpresaCliente;
 import com.agileict.modules.empresa.repository.EmpresaClienteRepository;
 import com.agileict.modules.profesional.entity.ProfesionalSenior;
@@ -29,6 +32,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -142,6 +147,78 @@ public class AuthService {
         suscripcion.setEstado(EstadoSuscripcion.ACTIVE);
         suscripcion.setFechaInicio(LocalDate.now());
         suscripcionRepository.save(suscripcion);
+
+        return login(new LoginRequest(request.responsableEmail(), request.password()));
+    }
+
+    @Transactional(readOnly = true)
+    public List<EmpresaClienteResponse> listCompanies() {
+        return empresaClienteRepository.findAll()
+                .stream()
+                .sorted(Comparator.comparing(EmpresaCliente::getNombre, String.CASE_INSENSITIVE_ORDER))
+                .map(empresa -> new EmpresaClienteResponse(
+                        empresa.getId(),
+                        empresa.getNombre(),
+                        empresa.getCif(),
+                        empresa.getSector(),
+                        empresa.isActiva()
+                ))
+                .toList();
+    }
+
+    @Transactional
+    public EmpresaClienteResponse createCompany(CreateCompanyRequest request) {
+        if (empresaClienteRepository.existsByCif(request.cif())) {
+            throw new BusinessException("Ya existe una empresa registrada con ese CIF.");
+        }
+
+        EmpresaCliente empresa = new EmpresaCliente();
+        empresa.setNombre(request.nombre());
+        empresa.setCif(request.cif());
+        empresa.setSector(request.sector());
+        empresa.setActiva(true);
+        EmpresaCliente saved = empresaClienteRepository.save(empresa);
+
+        return new EmpresaClienteResponse(
+                saved.getId(),
+                saved.getNombre(),
+                saved.getCif(),
+                saved.getSector(),
+                saved.isActiva()
+        );
+    }
+
+    @Transactional
+    public AuthResponse registerRrhh(RegisterRrhhRequest request) {
+        ensureEmailAvailable(request.responsableEmail());
+
+        EmpresaCliente empresa = empresaClienteRepository.findById(request.empresaClienteId())
+                .orElseThrow(() -> new BusinessException("No existe la empresa seleccionada."));
+
+        UserAccount account = new UserAccount();
+        account.setEmail(request.responsableEmail());
+        account.setPasswordHash(passwordEncoder.encode(request.password()));
+        account.getRoles().add(findRole(RoleName.ROLE_RRHH));
+        userAccountRepository.save(account);
+
+        ResponsableRrhh responsable = new ResponsableRrhh();
+        responsable.setNombre(request.responsableNombre());
+        responsable.setApellidos(request.responsableApellidos());
+        responsable.setEmail(request.responsableEmail());
+        responsable.setCargo(request.cargo());
+        responsable.setActivo(true);
+        responsable.setEmpresaCliente(empresa);
+        responsable.setUserAccount(account);
+        responsableRrhhRepository.save(responsable);
+
+        if (suscripcionRepository.findByEmpresaClienteId(empresa.getId()).isEmpty()) {
+            Suscripcion suscripcion = new Suscripcion();
+            suscripcion.setEmpresaCliente(empresa);
+            suscripcion.setPlan(PlanSuscripcion.BRONZE);
+            suscripcion.setEstado(EstadoSuscripcion.ACTIVE);
+            suscripcion.setFechaInicio(LocalDate.now());
+            suscripcionRepository.save(suscripcion);
+        }
 
         return login(new LoginRequest(request.responsableEmail(), request.password()));
     }

@@ -4,6 +4,7 @@ import { ProtectedRoute } from '../../components/common/ProtectedRoute';
 import { LoginPage } from '../../features/auth/pages/LoginPage';
 import { RegisterChoicePage } from '../../features/auth/pages/RegisterChoicePage';
 import { RegisterProfessionalPage } from '../../features/auth/pages/RegisterProfessionalPage';
+import { RegisterCompanyPage } from '../../features/auth/pages/RegisterCompanyPage';
 import { RegisterRrhhPage } from '../../features/auth/pages/RegisterRrhhPage';
 import { RRHHDashboardPage } from '../../features/rrhh/pages/RRHHDashboardPage';
 import { ProcessesPage } from '../../features/rrhh/pages/ProcessesPage';
@@ -21,6 +22,7 @@ export function AppRouter() {
       <Route path={PATHS.registerChoice} element={<RegisterChoicePage />} />
       <Route path={PATHS.registerProfessional} element={<RegisterProfessionalPage />} />
       <Route path={PATHS.registerRrhh} element={<RegisterRrhhPage />} />
+      <Route path={PATHS.registerCompany} element={<RegisterCompanyPage />} />
 
       <Route element={<ProtectedRoute allowedRoles={['RRHH', 'PROFESSIONAL']} />}>
         <Route element={<AppLayout />}>

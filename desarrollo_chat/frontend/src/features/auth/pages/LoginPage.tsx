@@ -2,7 +2,6 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { PATHS } from '../../../routes/paths';
-import type { UserRole } from '../../../types/auth';
 
 export function LoginPage() {
   const { login, isAuthenticated, user } = useAuth();
@@ -10,7 +9,6 @@ export function LoginPage() {
   const location = useLocation();
   const [email, setEmail] = useState('rrhh@agileict.local');
   const [password, setPassword] = useState('demo1234');
-  const [role, setRole] = useState<UserRole>('RRHH');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const registrationSuccess =
@@ -28,8 +26,8 @@ export function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      await login({ email, password, role });
-      const fallbackPath = role === 'RRHH' ? PATHS.rrhhDashboard : PATHS.professionalDashboard;
+      const authenticatedUser = await login({ email, password });
+      const fallbackPath = authenticatedUser.role === 'RRHH' ? PATHS.rrhhDashboard : PATHS.professionalDashboard;
       const redirectTo = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || fallbackPath;
       navigate(redirectTo, { replace: true });
     } catch (err) {
@@ -39,15 +37,14 @@ export function LoginPage() {
     }
   }
 
-  function loadDemo(roleToLoad: UserRole) {
-    if (roleToLoad === 'RRHH') {
+  function loadDemoAccount(account: 'RRHH' | 'PROFESSIONAL') {
+    if (account === 'RRHH') {
       setEmail('rrhh@agileict.local');
-      setRole('RRHH');
     } else {
       setEmail('pro@agileict.local');
-      setRole('PROFESSIONAL');
     }
     setPassword('demo1234');
+    setError('');
   }
 
   return (
@@ -62,18 +59,21 @@ export function LoginPage() {
         <div className="demo-box">
           <strong>Cuentas demo</strong>
           <div className="demo-actions">
-            <button type="button" className="button button-secondary" onClick={() => loadDemo('RRHH')}>
+            <button type="button" className="button button-secondary" onClick={() => loadDemoAccount('RRHH')}>
               Cargar RRHH
             </button>
             <button
               type="button"
               className="button button-secondary"
-              onClick={() => loadDemo('PROFESSIONAL')}
+              onClick={() => loadDemoAccount('PROFESSIONAL')}
             >
               Cargar Profesional
             </button>
           </div>
-          <small>Contraseña de demo: demo1234</small>
+          <small>
+            Puedes usar `rrhh@agileict.local` o `pro@agileict.local` con contraseña `demo1234`. La redirección se
+            hace automáticamente según el rol del usuario autenticado.
+          </small>
         </div>
 
         <form onSubmit={handleSubmit} className="form-stack">
@@ -85,14 +85,6 @@ export function LoginPage() {
           <label>
             <span>Contraseña</span>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          </label>
-
-          <label>
-            <span>Rol</span>
-            <select value={role} onChange={(e) => setRole(e.target.value as UserRole)}>
-              <option value="RRHH">Responsable RRHH</option>
-              <option value="PROFESSIONAL">Profesional Senior</option>
-            </select>
           </label>
 
           {error ? <div className="alert alert-error">{error}</div> : null}

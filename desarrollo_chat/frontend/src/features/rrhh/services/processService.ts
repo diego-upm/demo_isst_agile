@@ -4,7 +4,13 @@ export type NivelConfidencialidad = 'INTERNAL' | 'CONFIDENTIAL';
 
 interface ResponsableRrhhMeResponse {
   id: string;
+  nombre: string;
+  apellidos: string;
+  email: string;
+  cargo?: string | null;
   empresaClienteId: string;
+  empresaClienteNombre: string;
+  empresaClienteSector?: string | null;
 }
 
 interface CreateProcesoRequest {
@@ -47,4 +53,8 @@ export async function listProcesosByEmpresa(token: string, empresaClienteId: str
   return apiClient.get<ProcesoResponse[]>(`/v1/procesos?empresaClienteId=${encodeURIComponent(empresaClienteId)}`, {
     token,
   });
+}
+
+export async function deleteProceso(token: string, procesoId: string): Promise<void> {
+  return apiClient.delete<void>(`/v1/procesos/${encodeURIComponent(procesoId)}`, { token });
 }

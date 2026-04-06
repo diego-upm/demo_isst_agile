@@ -3,7 +3,12 @@ import { PageHeader } from '../../../components/common/PageHeader';
 import { useNavigate } from 'react-router-dom';
 import { PATHS } from '../../../routes/paths';
 import { useAuth } from '../../auth/hooks/useAuth';
-import { getMyRrhhContext, listProcesosByEmpresa, type ProcesoResponse } from '../services/processService';
+import {
+  deleteProceso,
+  getMyRrhhContext,
+  listProcesosByEmpresa,
+  type ProcesoResponse,
+} from '../services/processService';
 
 function mapProcessStatus(status?: string): string {
   if (status === 'ACTIVE') return 'Activo';
@@ -19,6 +24,9 @@ export function ProcessesPage() {
   const [processes, setProcesses] = useState<ProcesoResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [processToDelete, setProcessToDelete] = useState<ProcesoResponse | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -69,6 +77,40 @@ export function ProcessesPage() {
     navigate(`${PATHS.rrhhSelection}?processId=${encodeURIComponent(processId)}`);
   };
 
+  const handleAskDelete = (process: ProcesoResponse) => {
+    setActionMessage(null);
+    setProcessToDelete(process);
+  };
+
+  const handleCancelDelete = () => {
+    if (isDeleting) {
+      return;
+    }
+
+    setProcessToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!token || !processToDelete) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setError(null);
+    setActionMessage(null);
+
+    try {
+      await deleteProceso(token, processToDelete.id);
+      setProcesses((current) => current.filter((process) => process.id !== processToDelete.id));
+      setActionMessage('Proceso eliminado correctamente.');
+      setProcessToDelete(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo eliminar el proceso.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <section>
       <PageHeader
@@ -82,6 +124,7 @@ export function ProcessesPage() {
       />
 
       {error ? <div className="alert alert-error">{error}</div> : null}
+      {actionMessage ? <div className="alert alert-success">{actionMessage}</div> : null}
       {isLoading ? <div className="card">Cargando procesos...</div> : null}
 
       {!isLoading && !hasProcesses ? (
@@ -98,16 +141,55 @@ export function ProcessesPage() {
                 <h3>{process.titulo || 'Proceso sin titulo'}</h3>
                 <p>{process.tecnologiasRequeridas || 'Tecnologias sin definir'}</p>
               </div>
-              <button
-                type="button"
-                className="button button-secondary"
-                onClick={() => handleOpenDetail(process.id)}
-              >
-                Abrir detalle
-              </button>
+              <div className="page-actions">
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={() => handleOpenDetail(process.id)}
+                >
+                  Abrir detalle
+                </button>
+                <button
+                  type="button"
+                  className="button button-secondary button-danger"
+                  onClick={() => handleAskDelete(process)}
+                >
+                  Eliminar proceso
+                </button>
+              </div>
             </div>
           </article>
           ))}
+        </div>
+      ) : null}
+
+      {processToDelete ? (
+        <div className="confirm-overlay" role="dialog" aria-modal="true">
+          <article className="card confirm-card">
+            <h3>Confirmar eliminacion</h3>
+            <p>
+              Vas a eliminar el proceso <strong>{processToDelete.titulo || processToDelete.id}</strong>. Esta accion no
+              se puede deshacer.
+            </p>
+            <div className="page-actions">
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={handleCancelDelete}
+                disabled={isDeleting}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="button button-danger"
+                onClick={() => void handleConfirmDelete()}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Eliminando...' : 'Si, eliminar proceso'}
+              </button>
+            </div>
+          </article>
         </div>
       ) : null}
     </section>

@@ -9,6 +9,7 @@ public record ResponsableRrhhResponse(
         String email,
         String cargo,
         UUID empresaClienteId,
-        String empresaClienteNombre
+        String empresaClienteNombre,
+        String empresaClienteSector
 ) {
 }

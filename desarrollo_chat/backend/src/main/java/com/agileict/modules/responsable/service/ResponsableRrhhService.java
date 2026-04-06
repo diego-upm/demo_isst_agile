@@ -30,7 +30,8 @@ public class ResponsableRrhhService {
                 responsable.getEmail(),
                 responsable.getCargo(),
                 responsable.getEmpresaCliente().getId(),
-                responsable.getEmpresaCliente().getNombre()
+            responsable.getEmpresaCliente().getNombre(),
+            responsable.getEmpresaCliente().getSector()
         );
     }
 }

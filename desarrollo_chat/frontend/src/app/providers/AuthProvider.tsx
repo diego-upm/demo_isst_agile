@@ -28,6 +28,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const session = await loginWithBackend(credentials);
     setUser(session.user);
     setToken(session.token);
+    return session.user;
   }
 
   function logout() {

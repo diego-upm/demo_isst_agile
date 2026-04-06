@@ -15,7 +15,6 @@ export interface AuthSession {
 export interface LoginCredentials {
   email: string;
   password: string;
-  role: UserRole;
 }
 
 export interface AuthContextValue {
@@ -23,6 +22,6 @@ export interface AuthContextValue {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<AuthUser>;
   logout: () => void;
 }

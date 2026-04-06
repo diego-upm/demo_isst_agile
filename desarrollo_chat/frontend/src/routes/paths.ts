@@ -4,6 +4,7 @@ export const PATHS = {
   registerChoice: '/registro',
   registerProfessional: '/registro/profesional',
   registerRrhh: '/registro/rrhh',
+  registerCompany: '/registro/rrhh/empresa/nueva',
   rrhhDashboard: '/rrhh',
   rrhhSubscription: '/rrhh/suscripcion',
   rrhhProcesses: '/rrhh/procesos',
