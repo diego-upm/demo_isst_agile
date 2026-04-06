@@ -8,7 +8,13 @@ export interface ProfessionalProfileResponse {
   apellidos: string;
   email: string;
   tecnologiasClave: string | null;
+  titulacionesAcademicas: string | null;
+  idiomas: string | null;
+  softSkills: string | null;
   aniosExperiencia: number | null;
+  rangoSalarialEsperadoMin: number | null;
+  rangoSalarialEsperadoMax: number | null;
+  descripcionPersonal: string | null;
   disponibilidad: BackendAvailability;
   perfilVisible: boolean;
   activo: boolean;
@@ -18,7 +24,13 @@ export interface UpdateProfessionalProfileRequest {
   nombre: string;
   apellidos: string;
   tecnologiasClave: string;
+  titulacionesAcademicas: string;
+  idiomas: string;
+  softSkills: string;
   aniosExperiencia: number;
+  rangoSalarialEsperadoMin: number | null;
+  rangoSalarialEsperadoMax: number | null;
+  descripcionPersonal: string;
   disponibilidad: BackendAvailability;
   perfilVisible: boolean;
 }

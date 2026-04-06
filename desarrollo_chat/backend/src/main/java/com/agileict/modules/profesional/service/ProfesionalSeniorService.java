@@ -44,7 +44,13 @@ public class ProfesionalSeniorService {
         profesional.setNombre(request.nombre().trim());
         profesional.setApellidos(request.apellidos().trim());
         profesional.setTecnologiasClave(request.tecnologiasClave() == null ? null : request.tecnologiasClave().trim());
+        profesional.setTitulacionesAcademicas(request.titulacionesAcademicas() == null ? null : request.titulacionesAcademicas().trim());
+        profesional.setIdiomas(request.idiomas() == null ? null : request.idiomas().trim());
+        profesional.setSoftSkills(request.softSkills() == null ? null : request.softSkills().trim());
         profesional.setAniosExperiencia(request.aniosExperiencia());
+        profesional.setRangoSalarialEsperadoMin(request.rangoSalarialEsperadoMin());
+        profesional.setRangoSalarialEsperadoMax(request.rangoSalarialEsperadoMax());
+        profesional.setDescripcionPersonal(request.descripcionPersonal() == null ? null : request.descripcionPersonal().trim());
         profesional.setDisponibilidad(request.disponibilidad());
         profesional.setPerfilVisible(Boolean.TRUE.equals(request.perfilVisible()));
 
@@ -58,7 +64,13 @@ public class ProfesionalSeniorService {
                 profesional.getApellidos(),
                 profesional.getEmail(),
                 profesional.getTecnologiasClave(),
+                profesional.getTitulacionesAcademicas(),
+                profesional.getIdiomas(),
+                profesional.getSoftSkills(),
                 profesional.getAniosExperiencia(),
+                profesional.getRangoSalarialEsperadoMin(),
+                profesional.getRangoSalarialEsperadoMax(),
+                profesional.getDescripcionPersonal(),
                 profesional.getDisponibilidad(),
                 profesional.isPerfilVisible(),
                 profesional.isActivo()

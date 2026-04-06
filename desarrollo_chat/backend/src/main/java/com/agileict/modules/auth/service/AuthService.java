@@ -100,7 +100,13 @@ public class AuthService {
         profesional.setApellidos(request.apellidos());
         profesional.setEmail(request.email());
         profesional.setTecnologiasClave(request.tecnologiasClave());
+        profesional.setTitulacionesAcademicas(request.titulacionesAcademicas());
+        profesional.setIdiomas(request.idiomas());
+        profesional.setSoftSkills(request.softSkills());
         profesional.setAniosExperiencia(request.aniosExperiencia());
+        profesional.setRangoSalarialEsperadoMin(request.rangoSalarialEsperadoMin());
+        profesional.setRangoSalarialEsperadoMax(request.rangoSalarialEsperadoMax());
+        profesional.setDescripcionPersonal(request.descripcionPersonal());
         profesional.setDisponibilidad(DisponibilidadProfesional.OPEN_TO_OFFERS);
         profesional.setPerfilVisible(false);
         profesional.setActivo(true);

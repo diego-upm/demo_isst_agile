@@ -19,6 +19,12 @@ export interface RegisterProfessionalPayload {
   password: string;
   tecnologiasClave?: string;
   aniosExperiencia?: number;
+  titulacionesAcademicas?: string;
+  idiomas?: string;
+  softSkills?: string;
+  rangoSalarialEsperadoMin?: number;
+  rangoSalarialEsperadoMax?: number;
+  descripcionPersonal?: string;
 }
 
 export interface RegisterRrhhPayload {

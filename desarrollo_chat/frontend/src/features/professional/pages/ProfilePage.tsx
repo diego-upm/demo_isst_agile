@@ -14,7 +14,13 @@ type ProfileData = {
   nombre: string;
   apellidos: string;
   keyTechnologies: string;
+  academicQualifications: string;
+  languages: string;
+  softSkills: string;
   yearsExperience: number;
+  salaryExpectationMin: string;
+  salaryExpectationMax: string;
+  personalDescription: string;
   availability: Availability;
   visibilityConsent: boolean;
   email: string;
@@ -24,7 +30,13 @@ const DEFAULT_PROFILE: ProfileData = {
   nombre: '',
   apellidos: '',
   keyTechnologies: '',
+  academicQualifications: '',
+  languages: '',
+  softSkills: '',
   yearsExperience: 0,
+  salaryExpectationMin: '',
+  salaryExpectationMax: '',
+  personalDescription: '',
   availability: 'OPEN_TO_OFFERS',
   visibilityConsent: false,
   email: '',
@@ -43,7 +55,13 @@ function mapResponseToProfileData(response: ProfessionalProfileResponse): Profil
     nombre: response.nombre ?? '',
     apellidos: response.apellidos ?? '',
     keyTechnologies: response.tecnologiasClave ?? '',
+    academicQualifications: response.titulacionesAcademicas ?? '',
+    languages: response.idiomas ?? '',
+    softSkills: response.softSkills ?? '',
     yearsExperience: response.aniosExperiencia ?? 0,
+    salaryExpectationMin: response.rangoSalarialEsperadoMin?.toString() ?? '',
+    salaryExpectationMax: response.rangoSalarialEsperadoMax?.toString() ?? '',
+    personalDescription: response.descripcionPersonal ?? '',
     availability: response.disponibilidad,
     visibilityConsent: response.perfilVisible,
     email: response.email ?? '',
@@ -117,6 +135,14 @@ export function ProfilePage() {
       headline: `${profile.nombre} ${profile.apellidos}`.trim() || FALLBACK_TEXT,
       experience: profile.yearsExperience > 0 ? `${profile.yearsExperience} anos` : FALLBACK_TEXT,
       keyTechnologies: profile.keyTechnologies.trim() || FALLBACK_TEXT,
+      academicQualifications: profile.academicQualifications.trim() || FALLBACK_TEXT,
+      languages: profile.languages.trim() || FALLBACK_TEXT,
+      softSkills: profile.softSkills.trim() || FALLBACK_TEXT,
+      salaryExpectation:
+        profile.salaryExpectationMin || profile.salaryExpectationMax
+          ? `${profile.salaryExpectationMin || '-'} - ${profile.salaryExpectationMax || '-'} €`
+          : FALLBACK_TEXT,
+      personalDescription: profile.personalDescription.trim() || FALLBACK_TEXT,
       availability: mapAvailabilityLabel(profile.availability),
       visibility: profile.visibilityConsent ? 'Autorizada bajo solicitud explicita' : 'No autorizada',
       email: profile.email.trim() || FALLBACK_TEXT,
@@ -150,7 +176,13 @@ export function ProfilePage() {
       nombre: draft.nombre.trim(),
       apellidos: draft.apellidos.trim(),
       tecnologiasClave: draft.keyTechnologies.trim(),
+      titulacionesAcademicas: draft.academicQualifications.trim(),
+      idiomas: draft.languages.trim(),
+      softSkills: draft.softSkills.trim(),
       aniosExperiencia: draft.yearsExperience,
+      rangoSalarialEsperadoMin: draft.salaryExpectationMin.trim() === '' ? null : Number(draft.salaryExpectationMin),
+      rangoSalarialEsperadoMax: draft.salaryExpectationMax.trim() === '' ? null : Number(draft.salaryExpectationMax),
+      descripcionPersonal: draft.personalDescription.trim(),
       disponibilidad: normalizeBackendAvailability(draft.availability),
       perfilVisible: draft.visibilityConsent,
     };
@@ -208,6 +240,26 @@ export function ProfilePage() {
             <dd>{profileSummary.keyTechnologies}</dd>
           </div>
           <div>
+            <dt>Titulaciones academicas</dt>
+            <dd>{profileSummary.academicQualifications}</dd>
+          </div>
+          <div>
+            <dt>Idiomas</dt>
+            <dd>{profileSummary.languages}</dd>
+          </div>
+          <div>
+            <dt>Soft skills</dt>
+            <dd>{profileSummary.softSkills}</dd>
+          </div>
+          <div>
+            <dt>Rango salarial esperado</dt>
+            <dd>{profileSummary.salaryExpectation}</dd>
+          </div>
+          <div>
+            <dt>Descripcion personal</dt>
+            <dd>{profileSummary.personalDescription}</dd>
+          </div>
+          <div>
             <dt>Disponibilidad</dt>
             <dd>{profileSummary.availability}</dd>
           </div>
@@ -259,6 +311,34 @@ export function ProfilePage() {
           </label>
 
           <label>
+            <span>Titulaciones academicas</span>
+            <textarea
+              placeholder="Grado en Ingenieria Informatica, Master en IA..."
+              value={draft.academicQualifications}
+              onChange={(event) => setDraft((current) => ({ ...current, academicQualifications: event.target.value }))}
+            />
+          </label>
+
+          <label>
+            <span>Idiomas</span>
+            <input
+              type="text"
+              placeholder="Ingles C1, Frances B2..."
+              value={draft.languages}
+              onChange={(event) => setDraft((current) => ({ ...current, languages: event.target.value }))}
+            />
+          </label>
+
+          <label>
+            <span>Soft skills</span>
+            <textarea
+              placeholder="Liderazgo, comunicacion, trabajo en equipo..."
+              value={draft.softSkills}
+              onChange={(event) => setDraft((current) => ({ ...current, softSkills: event.target.value }))}
+            />
+          </label>
+
+          <label>
             <span>Anos de experiencia</span>
             <input
               type="number"
@@ -271,6 +351,37 @@ export function ProfilePage() {
                   yearsExperience: Number.isNaN(Number(event.target.value)) ? 0 : Number(event.target.value),
                 }))
               }
+            />
+          </label>
+
+          <div className="grid-cards">
+            <label>
+              <span>Rango salarial esperado minimo</span>
+              <input
+                type="number"
+                min={0}
+                value={draft.salaryExpectationMin}
+                onChange={(event) => setDraft((current) => ({ ...current, salaryExpectationMin: event.target.value }))}
+              />
+            </label>
+
+            <label>
+              <span>Rango salarial esperado maximo</span>
+              <input
+                type="number"
+                min={0}
+                value={draft.salaryExpectationMax}
+                onChange={(event) => setDraft((current) => ({ ...current, salaryExpectationMax: event.target.value }))}
+              />
+            </label>
+          </div>
+
+          <label>
+            <span>Descripcion personal</span>
+            <textarea
+              placeholder="Cuéntanos brevemente tu perfil profesional y tu forma de trabajar..."
+              value={draft.personalDescription}
+              onChange={(event) => setDraft((current) => ({ ...current, personalDescription: event.target.value }))}
             />
           </label>
 

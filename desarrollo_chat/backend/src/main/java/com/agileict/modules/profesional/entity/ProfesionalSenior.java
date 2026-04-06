@@ -21,8 +21,26 @@ public class ProfesionalSenior extends BaseEntity {
     @Column(length = 1000)
     private String tecnologiasClave;
 
+    @Column(name = "titulaciones_academicas", length = 1500)
+    private String titulacionesAcademicas;
+
+    @Column(length = 1000)
+    private String idiomas;
+
+    @Column(name = "soft_skills", length = 1000)
+    private String softSkills;
+
     @Column
     private Integer aniosExperiencia;
+
+    @Column(name = "rango_salarial_esperado_min")
+    private Integer rangoSalarialEsperadoMin;
+
+    @Column(name = "rango_salarial_esperado_max")
+    private Integer rangoSalarialEsperadoMax;
+
+    @Column(name = "descripcion_personal", length = 2000)
+    private String descripcionPersonal;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
@@ -54,8 +72,32 @@ public class ProfesionalSenior extends BaseEntity {
         return tecnologiasClave;
     }
 
+    public String getTitulacionesAcademicas() {
+        return titulacionesAcademicas;
+    }
+
+    public String getIdiomas() {
+        return idiomas;
+    }
+
+    public String getSoftSkills() {
+        return softSkills;
+    }
+
     public Integer getAniosExperiencia() {
         return aniosExperiencia;
+    }
+
+    public Integer getRangoSalarialEsperadoMin() {
+        return rangoSalarialEsperadoMin;
+    }
+
+    public Integer getRangoSalarialEsperadoMax() {
+        return rangoSalarialEsperadoMax;
+    }
+
+    public String getDescripcionPersonal() {
+        return descripcionPersonal;
     }
 
     public DisponibilidadProfesional getDisponibilidad() {
@@ -90,8 +132,32 @@ public class ProfesionalSenior extends BaseEntity {
         this.tecnologiasClave = tecnologiasClave;
     }
 
+    public void setTitulacionesAcademicas(String titulacionesAcademicas) {
+        this.titulacionesAcademicas = titulacionesAcademicas;
+    }
+
+    public void setIdiomas(String idiomas) {
+        this.idiomas = idiomas;
+    }
+
+    public void setSoftSkills(String softSkills) {
+        this.softSkills = softSkills;
+    }
+
     public void setAniosExperiencia(Integer aniosExperiencia) {
         this.aniosExperiencia = aniosExperiencia;
+    }
+
+    public void setRangoSalarialEsperadoMin(Integer rangoSalarialEsperadoMin) {
+        this.rangoSalarialEsperadoMin = rangoSalarialEsperadoMin;
+    }
+
+    public void setRangoSalarialEsperadoMax(Integer rangoSalarialEsperadoMax) {
+        this.rangoSalarialEsperadoMax = rangoSalarialEsperadoMax;
+    }
+
+    public void setDescripcionPersonal(String descripcionPersonal) {
+        this.descripcionPersonal = descripcionPersonal;
     }
 
     public void setDisponibilidad(DisponibilidadProfesional disponibilidad) {

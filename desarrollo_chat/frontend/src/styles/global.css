@@ -53,6 +53,13 @@ select {
   padding: 0.9rem 1rem;
 }
 
+input.input-error,
+textarea.input-error,
+select.input-error {
+  border-color: rgba(255, 92, 92, 0.85);
+  box-shadow: 0 0 0 3px rgba(255, 92, 92, 0.12);
+}
+
 textarea {
   min-height: 140px;
   resize: vertical;
@@ -63,6 +70,23 @@ label {
   flex-direction: column;
   gap: 0.45rem;
   font-size: 0.95rem;
+}
+
+.field-hint {
+  color: #9fb0c2;
+  font-size: 0.86rem;
+}
+
+.field-hint-info {
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(73, 139, 255, 0.12);
+  border: 1px solid rgba(73, 139, 255, 0.22);
+}
+
+.field-error {
+  color: #ffb3b3;
+  font-size: 0.86rem;
 }
 
 h1,

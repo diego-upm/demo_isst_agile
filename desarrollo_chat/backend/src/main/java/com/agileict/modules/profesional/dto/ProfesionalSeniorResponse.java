@@ -10,7 +10,13 @@ public record ProfesionalSeniorResponse(
         String apellidos,
         String email,
         String tecnologiasClave,
+        String titulacionesAcademicas,
+        String idiomas,
+        String softSkills,
         Integer aniosExperiencia,
+        Integer rangoSalarialEsperadoMin,
+        Integer rangoSalarialEsperadoMax,
+        String descripcionPersonal,
         DisponibilidadProfesional disponibilidad,
         boolean perfilVisible,
         boolean activo

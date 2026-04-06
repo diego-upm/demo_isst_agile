@@ -94,26 +94,34 @@ public class DemoDataInitializer implements CommandLineRunner {
             suscripcionRepository.save(suscripcion);
         }
 
-        if (!userAccountRepository.existsByEmail("pro@agileict.local")) {
-            UserAccount professionalAccount = new UserAccount();
-            professionalAccount.setEmail("pro@agileict.local");
-            professionalAccount.setPasswordHash(passwordEncoder.encode("demo1234"));
-            professionalAccount.setRoles(Set.of(professionalRole));
-            userAccountRepository.save(professionalAccount);
+        UserAccount professionalAccount = userAccountRepository.findByEmail("pro@agileict.local")
+            .orElseGet(() -> {
+                UserAccount account = new UserAccount();
+                account.setEmail("pro@agileict.local");
+                account.setPasswordHash(passwordEncoder.encode("demo1234"));
+                account.getRoles().add(professionalRole);
+                return userAccountRepository.save(account);
+            });
 
-            ProfesionalSenior profesional = new ProfesionalSenior();
-            profesional.setId(UUID.fromString("33333333-3333-3333-3333-333333333333"));
-            profesional.setNombre("Carlos");
-            profesional.setApellidos("Serrano");
-            profesional.setEmail("pro@agileict.local");
-            profesional.setTecnologiasClave("Java, Spring Boot, Kubernetes, PostgreSQL");
-            profesional.setAniosExperiencia(12);
-            profesional.setDisponibilidad(DisponibilidadProfesional.OPEN_TO_OFFERS);
-            profesional.setPerfilVisible(true);
-            profesional.setActivo(true);
-            profesional.setUserAccount(professionalAccount);
-            profesionalSeniorRepository.save(profesional);
-        }
+        ProfesionalSenior profesional = profesionalSeniorRepository.findByEmail("pro@agileict.local")
+            .orElseGet(ProfesionalSenior::new);
+        profesional.setId(profesional.getId() == null ? UUID.fromString("33333333-3333-3333-3333-333333333333") : profesional.getId());
+        profesional.setNombre("Carlos");
+        profesional.setApellidos("Serrano");
+        profesional.setEmail("pro@agileict.local");
+        profesional.setTecnologiasClave("Java, Spring Boot, Kubernetes, PostgreSQL");
+        profesional.setTitulacionesAcademicas("Grado en Ingenieria Informatica, Master en Desarrollo de Software");
+        profesional.setIdiomas("Ingles C1, Frances B2");
+        profesional.setSoftSkills("Liderazgo, comunicacion, trabajo en equipo, adaptabilidad");
+        profesional.setAniosExperiencia(12);
+        profesional.setRangoSalarialEsperadoMin(45000);
+        profesional.setRangoSalarialEsperadoMax(60000);
+        profesional.setDescripcionPersonal("Profesional senior orientado a arquitectura backend y equipos de alto rendimiento.");
+        profesional.setDisponibilidad(DisponibilidadProfesional.OPEN_TO_OFFERS);
+        profesional.setPerfilVisible(true);
+        profesional.setActivo(true);
+        profesional.setUserAccount(professionalAccount);
+        profesionalSeniorRepository.save(profesional);
 
         if (!userAccountRepository.existsByEmail("admin@agileict.local")) {
             UserAccount adminAccount = new UserAccount();
