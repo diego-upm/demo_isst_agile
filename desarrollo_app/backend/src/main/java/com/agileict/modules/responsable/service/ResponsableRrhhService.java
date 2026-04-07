@@ -28,7 +28,6 @@ public class ResponsableRrhhService {
                 responsable.getNombre(),
                 responsable.getApellidos(),
                 responsable.getEmail(),
-                responsable.getCargo(),
                 responsable.getEmpresaCliente().getId(),
             responsable.getEmpresaCliente().getNombre(),
             responsable.getEmpresaCliente().getSector()

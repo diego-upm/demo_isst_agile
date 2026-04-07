@@ -14,7 +14,6 @@ export function RegisterRrhhPage() {
   const [responsableNombre, setResponsableNombre] = useState('');
   const [responsableApellidos, setResponsableApellidos] = useState('');
   const [responsableEmail, setResponsableEmail] = useState('');
-  const [cargo, setCargo] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -137,7 +136,6 @@ export function RegisterRrhhPage() {
         responsableApellidos: responsableApellidos.trim(),
         responsableEmail: responsableEmail.trim(),
         password,
-        cargo: cargo.trim() || undefined,
       });
 
       navigate(PATHS.login, {
@@ -244,11 +242,6 @@ export function RegisterRrhhPage() {
               onChange={(event) => setResponsableEmail(event.target.value)}
               required
             />
-          </label>
-
-          <label>
-            <span>Cargo</span>
-            <input value={cargo} onChange={(event) => setCargo(event.target.value)} />
           </label>
 
           <label>

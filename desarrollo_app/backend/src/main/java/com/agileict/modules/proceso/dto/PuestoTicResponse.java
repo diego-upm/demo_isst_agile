@@ -1,5 +1,6 @@
 package com.agileict.modules.proceso.dto;
 
+import com.agileict.shared.enums.AreaNegocioProfesional;
 import com.agileict.shared.enums.SenioridadPuesto;
 
 import java.util.UUID;
@@ -11,6 +12,9 @@ public record PuestoTicResponse(
         String modalidad,
         String ubicacion,
         String area,
-        String descripcion
+        String descripcion,
+        String tecnologiasRequeridas,
+        String tipoContrato,
+        AreaNegocioProfesional sectorRequerido
 ) {
 }

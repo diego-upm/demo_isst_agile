@@ -80,7 +80,6 @@ public class DemoDataInitializer implements CommandLineRunner {
             responsable.setNombre("Laura");
             responsable.setApellidos("Martín");
             responsable.setEmail("rrhh@agileict.local");
-            responsable.setCargo("HR Manager");
             responsable.setActivo(true);
             responsable.setEmpresaCliente(empresa);
             responsable.setUserAccount(rrhhAccount);
@@ -89,7 +88,7 @@ public class DemoDataInitializer implements CommandLineRunner {
             Suscripcion suscripcion = new Suscripcion();
             suscripcion.setId(UUID.fromString("44444444-4444-4444-4444-444444444444"));
             suscripcion.setEmpresaCliente(empresa);
-            suscripcion.setPlan(PlanSuscripcion.BRONZE);
+            suscripcion.setPlan(PlanSuscripcion.BASICO);
             suscripcion.setEstado(EstadoSuscripcion.ACTIVE);
             suscripcion.setFechaInicio(LocalDate.now());
             suscripcionRepository.save(suscripcion);

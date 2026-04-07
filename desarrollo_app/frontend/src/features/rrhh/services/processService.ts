@@ -1,4 +1,5 @@
 import { apiClient } from '../../../services/apiClient';
+import type { BusinessAreaValue } from '../../professional/types/businessAreas';
 
 export type NivelConfidencialidad = 'INTERNAL' | 'CONFIDENTIAL';
 
@@ -7,7 +8,6 @@ interface ResponsableRrhhMeResponse {
   nombre: string;
   apellidos: string;
   email: string;
-  cargo?: string | null;
   empresaClienteId: string;
   empresaClienteNombre: string;
   empresaClienteSector?: string | null;
@@ -19,11 +19,7 @@ interface CreateProcesoRequest {
   titulo: string;
   descripcion: string;
   nivelConfidencialidad: NivelConfidencialidad;
-  tecnologiasRequeridas?: string;
   nivelExperienciaMinimo?: string;
-  tipoContrato?: string;
-  rangoSalarialMinimo?: number;
-  rangoSalarialMaximo?: number;
   puestos: Array<{
     titulo: string;
     senioridad: 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD';
@@ -31,14 +27,17 @@ interface CreateProcesoRequest {
     ubicacion?: string;
     area?: string;
     descripcion?: string;
+    tecnologiasRequeridas?: string;
+    tipoContrato?: string;
+    sectorRequerido?: BusinessAreaValue;
   }>;
 }
 
 export interface ProcesoResponse {
   id: string;
   titulo?: string;
+  descripcion?: string;
   estado?: 'ACTIVE' | 'IN_SELECTION' | 'CLOSED' | 'CANCELLED';
-  tecnologiasRequeridas?: string | null;
 }
 
 export async function getMyRrhhContext(token: string): Promise<ResponsableRrhhMeResponse> {

@@ -10,7 +10,7 @@ import {
   type SelectionBoardItemResponse,
   type SelectionBoardResponse,
 } from '../services/selectionService';
-import { getBusinessAreaLabel } from '../../professional/types/businessAreas';
+import { BUSINESS_AREA_OPTIONS, getBusinessAreaLabel } from '../../professional/types/businessAreas';
 
 function mapCandidateState(state?: string | null): string {
   if (state === 'ACEPTADO') return 'Aceptado';
@@ -56,6 +56,11 @@ export function SelectionPage() {
   const [busyRemovalId, setBusyRemovalId] = useState<string | null>(null);
   const [expandedDetailCards, setExpandedDetailCards] = useState<Record<string, boolean>>({});
   const [visibleDetailsModalItem, setVisibleDetailsModalItem] = useState<SelectionBoardItemResponse | null>(null);
+  const [pendingAddCandidate, setPendingAddCandidate] = useState<SelectionBoardItemResponse | null>(null);
+  const [selectedPuestoId, setSelectedPuestoId] = useState('');
+  const [showAvailableFilters, setShowAvailableFilters] = useState(false);
+  const [minimumExperienceFilter, setMinimumExperienceFilter] = useState('');
+  const [businessAreaFilter, setBusinessAreaFilter] = useState('');
 
   useEffect(() => {
     if (!processId || !token) {
@@ -105,20 +110,79 @@ export function SelectionPage() {
     [board],
   );
 
-  async function handleAddCandidate(item: SelectionBoardItemResponse) {
+  const filteredAvailableProfessionals = useMemo(() => {
+    if (!board?.profesionalesDisponibles.length) {
+      return [];
+    }
+
+    const normalizedMinimumExperience = minimumExperienceFilter.trim() === '' ? null : Number(minimumExperienceFilter);
+    const hasExperienceFilter = normalizedMinimumExperience !== null && !Number.isNaN(normalizedMinimumExperience);
+    const hasBusinessAreaFilter = businessAreaFilter.trim() !== '';
+
+    return board.profesionalesDisponibles.filter((item) => {
+      if (hasExperienceFilter && (item.aniosExperiencia ?? 0) < normalizedMinimumExperience) {
+        return false;
+      }
+
+      if (hasBusinessAreaFilter && item.areaNegocio !== businessAreaFilter) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [board?.profesionalesDisponibles, businessAreaFilter, minimumExperienceFilter]);
+
+  const availableCountLabel = useMemo(() => {
+    const total = visibleCounts.disponibles;
+    const filtered = filteredAvailableProfessionals.length;
+
+    if (total === filtered) {
+      return `${filtered}`;
+    }
+
+    return `${filtered} / ${total}`;
+  }, [filteredAvailableProfessionals.length, visibleCounts.disponibles]);
+
+  function clearAvailableFilters(): void {
+    setMinimumExperienceFilter('');
+    setBusinessAreaFilter('');
+  }
+
+  function handleOpenAddCandidate(item: SelectionBoardItemResponse) {
+    const defaultPuestoId = board?.puestos[0]?.id ?? '';
+    setPendingAddCandidate(item);
+    setSelectedPuestoId(defaultPuestoId);
+  }
+
+  function handleCloseAddCandidate() {
+    setPendingAddCandidate(null);
+    setSelectedPuestoId('');
+  }
+
+  async function handleAddCandidate() {
     if (!token || !processId) {
       return;
     }
 
-    setBusyCandidateId(item.profesionalId);
+    if (!pendingAddCandidate) {
+      return;
+    }
+
+    if (!selectedPuestoId) {
+      setError('Debes seleccionar un puesto del proceso para enviar la invitación.');
+      return;
+    }
+
+    setBusyCandidateId(pendingAddCandidate.profesionalId);
     setError(null);
     setActionMessage(null);
 
     try {
-      await addCandidateToProcess(token, processId, item.profesionalId);
+      await addCandidateToProcess(token, processId, pendingAddCandidate.profesionalId, selectedPuestoId);
       const refreshed = await getSelectionBoard(token, processId, searchTerm);
       setBoard(refreshed);
       setActionMessage('Profesional añadido al proceso correctamente.');
+      handleCloseAddCandidate();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo añadir el profesional.');
     } finally {
@@ -356,14 +420,60 @@ export function SelectionPage() {
               <div className="selection-column-header">
                 <div>
                   <h3>Buscador de profesionales</h3>
-                  <p>Resultados filtrados entre todos los profesionales activos de la plataforma.</p>
+                  <p>Todos los candidatos aparecen por defecto. El filtro solo afecta a esta columna.</p>
                 </div>
-                <span className="badge">{visibleCounts.disponibles}</span>
+                <span className="badge">{availableCountLabel}</span>
+              </div>
+
+              <div className="selection-filter-shell">
+                <button
+                  type="button"
+                  className="button button-secondary button-small selection-filter-toggle"
+                  onClick={() => setShowAvailableFilters((current) => !current)}
+                >
+                  {showAvailableFilters ? 'Ocultar filtros' : 'Filtrar'}
+                </button>
+
+                {showAvailableFilters ? (
+                  <div className="selection-filter-panel">
+                    <div className="selection-filter-grid">
+                      <label>
+                        <span>Años mínimos de experiencia</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={60}
+                          placeholder="Ej. 5"
+                          value={minimumExperienceFilter}
+                          onChange={(event) => setMinimumExperienceFilter(event.target.value)}
+                        />
+                      </label>
+
+                      <label>
+                        <span>Área de negocio</span>
+                        <select value={businessAreaFilter} onChange={(event) => setBusinessAreaFilter(event.target.value)}>
+                          <option value="">Todas</option>
+                          {BUSINESS_AREA_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="selection-filter-actions">
+                      <button type="button" className="button button-secondary button-small" onClick={clearAvailableFilters}>
+                        Limpiar
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               <div className="selection-list">
-                {board?.profesionalesDisponibles.length ? (
-                  board.profesionalesDisponibles.map((item) => {
+                {filteredAvailableProfessionals.length ? (
+                  filteredAvailableProfessionals.map((item) => {
                     const cardKey = `disponible-${item.profesionalId}`;
                     const detailsOpen = Boolean(expandedDetailCards[cardKey]);
 
@@ -395,7 +505,7 @@ export function SelectionPage() {
                         <button
                           type="button"
                           className="button button-secondary button-small"
-                          onClick={() => void handleAddCandidate(item)}
+                          onClick={() => handleOpenAddCandidate(item)}
                           disabled={busyCandidateId === item.profesionalId}
                         >
                           {busyCandidateId === item.profesionalId ? 'Añadiendo...' : 'Añadir'}
@@ -435,6 +545,9 @@ export function SelectionPage() {
                         <p className="selection-item-muted">
                           {mapVisibilityState(item.solicitudVisibilidad)} ·{' '}
                           {formatExperience(item.aniosExperiencia)}
+                        </p>
+                        <p className="selection-item-muted">
+                          Puesto invitado: {item.puesto?.titulo || 'No indicado'}
                         </p>
                         {detailsOpen ? renderDetails(item) : null}
                       </div>
@@ -514,6 +627,9 @@ export function SelectionPage() {
                         <p className="selection-item-muted">
                           Estado candidatura: {mapCandidateState(item.estado)}
                         </p>
+                        <p className="selection-item-muted">
+                          Puesto invitado: {item.puesto?.titulo || 'No indicado'}
+                        </p>
                         {detailsOpen ? renderDetails(item) : null}
                       </div>
 
@@ -577,6 +693,43 @@ export function SelectionPage() {
                     onClick={() => setVisibleDetailsModalItem(null)}
                   >
                     Cerrar
+                  </button>
+                </div>
+              </article>
+            </div>
+          ) : null}
+
+          {pendingAddCandidate ? (
+            <div className="confirm-overlay" role="dialog" aria-modal="true" onClick={handleCloseAddCandidate}>
+              <article className="card confirm-card" onClick={(event) => event.stopPropagation()}>
+                <h3>Seleccionar puesto para invitación</h3>
+                <p>
+                  Profesional: <strong>{pendingAddCandidate.displayName}</strong>
+                </p>
+
+                <label>
+                  <span>Puesto del proceso</span>
+                  <select value={selectedPuestoId} onChange={(event) => setSelectedPuestoId(event.target.value)}>
+                    <option value="">Selecciona un puesto</option>
+                    {(board?.puestos ?? []).map((puesto) => (
+                      <option key={puesto.id} value={puesto.id}>
+                        {puesto.titulo} ({puesto.senioridad})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <div className="page-actions">
+                  <button type="button" className="button button-secondary" onClick={handleCloseAddCandidate}>
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    className="button"
+                    onClick={() => void handleAddCandidate()}
+                    disabled={busyCandidateId === pendingAddCandidate.profesionalId}
+                  >
+                    {busyCandidateId === pendingAddCandidate.profesionalId ? 'Enviando...' : 'Enviar invitación'}
                   </button>
                 </div>
               </article>

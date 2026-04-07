@@ -35,7 +35,6 @@ export interface RegisterRrhhPayload {
   responsableApellidos: string;
   responsableEmail: string;
   password: string;
-  cargo?: string;
 }
 
 export interface CompanyOption {

@@ -11,7 +11,6 @@ public record RegisterCompanyRequest(
         @NotBlank String responsableNombre,
         @NotBlank String responsableApellidos,
         @NotBlank @Email String responsableEmail,
-        @NotBlank @Size(min = 8, max = 72) String password,
-        String cargo
+        @NotBlank @Size(min = 8, max = 72) String password
 ) {
 }

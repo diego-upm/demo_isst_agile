@@ -64,11 +64,7 @@ public class ProcesoHeadhuntingService {
         proceso.setTitulo(request.titulo());
         proceso.setDescripcion(request.descripcion());
         proceso.setNivelConfidencialidad(request.nivelConfidencialidad());
-        proceso.setTecnologiasRequeridas(request.tecnologiasRequeridas());
         proceso.setNivelExperienciaMinimo(request.nivelExperienciaMinimo());
-        proceso.setTipoContrato(request.tipoContrato());
-        proceso.setRangoSalarialMinimo(request.rangoSalarialMinimo());
-        proceso.setRangoSalarialMaximo(request.rangoSalarialMaximo());
 
         if (request.puestos() != null) {
             request.puestos().forEach(p -> {
@@ -79,6 +75,9 @@ public class ProcesoHeadhuntingService {
                 puesto.setUbicacion(p.ubicacion());
                 puesto.setArea(p.area());
                 puesto.setDescripcion(p.descripcion());
+                puesto.setTecnologiasRequeridas(p.tecnologiasRequeridas());
+                puesto.setTipoContrato(p.tipoContrato());
+                puesto.setSectorRequerido(p.sectorRequerido());
                 proceso.addPuesto(puesto);
             });
         }
@@ -114,11 +113,7 @@ public class ProcesoHeadhuntingService {
                 proceso.getDescripcion(),
                 proceso.getEstado(),
                 proceso.getNivelConfidencialidad(),
-                proceso.getTecnologiasRequeridas(),
                 proceso.getNivelExperienciaMinimo(),
-                proceso.getTipoContrato(),
-                proceso.getRangoSalarialMinimo(),
-                proceso.getRangoSalarialMaximo(),
                 proceso.getEmpresaCliente().getId(),
                 proceso.getResponsableRrhh().getId(),
                 proceso.getPuestos().stream()
@@ -129,7 +124,10 @@ public class ProcesoHeadhuntingService {
                                 puesto.getModalidad(),
                                 puesto.getUbicacion(),
                                 puesto.getArea(),
-                                puesto.getDescripcion()
+                                puesto.getDescripcion(),
+                                puesto.getTecnologiasRequeridas(),
+                                puesto.getTipoContrato(),
+                                puesto.getSectorRequerido()
                         ))
                         .toList()
         );

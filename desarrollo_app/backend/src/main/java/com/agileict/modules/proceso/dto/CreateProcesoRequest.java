@@ -14,11 +14,7 @@ public record CreateProcesoRequest(
         @NotBlank String titulo,
         @NotBlank String descripcion,
         @NotNull NivelConfidencialidad nivelConfidencialidad,
-        String tecnologiasRequeridas,
         String nivelExperienciaMinimo,
-        String tipoContrato,
-        Integer rangoSalarialMinimo,
-        Integer rangoSalarialMaximo,
         @Valid List<PuestoTicRequest> puestos
 ) {
 }

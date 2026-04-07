@@ -18,9 +18,6 @@ public class ResponsableRrhh extends BaseEntity {
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
-    @Column(length = 100)
-    private String cargo;
-
     @Column(nullable = false)
     private boolean activo = true;
 
@@ -42,10 +39,6 @@ public class ResponsableRrhh extends BaseEntity {
 
     public String getEmail() {
         return email;
-    }
-
-    public String getCargo() {
-        return cargo;
     }
 
     public boolean isActivo() {
@@ -70,10 +63,6 @@ public class ResponsableRrhh extends BaseEntity {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public void setCargo(String cargo) {
-        this.cargo = cargo;
     }
 
     public void setActivo(boolean activo) {

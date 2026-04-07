@@ -142,7 +142,6 @@ public class AuthService {
         responsable.setNombre(request.responsableNombre());
         responsable.setApellidos(request.responsableApellidos());
         responsable.setEmail(request.responsableEmail());
-        responsable.setCargo(request.cargo());
         responsable.setActivo(true);
         responsable.setEmpresaCliente(empresa);
         responsable.setUserAccount(account);
@@ -150,7 +149,7 @@ public class AuthService {
 
         Suscripcion suscripcion = new Suscripcion();
         suscripcion.setEmpresaCliente(empresa);
-        suscripcion.setPlan(PlanSuscripcion.BRONZE);
+        suscripcion.setPlan(PlanSuscripcion.BASICO);
         suscripcion.setEstado(EstadoSuscripcion.ACTIVE);
         suscripcion.setFechaInicio(LocalDate.now());
         suscripcionRepository.save(suscripcion);
@@ -212,7 +211,6 @@ public class AuthService {
         responsable.setNombre(request.responsableNombre());
         responsable.setApellidos(request.responsableApellidos());
         responsable.setEmail(request.responsableEmail());
-        responsable.setCargo(request.cargo());
         responsable.setActivo(true);
         responsable.setEmpresaCliente(empresa);
         responsable.setUserAccount(account);
@@ -221,7 +219,7 @@ public class AuthService {
         if (suscripcionRepository.findByEmpresaClienteId(empresa.getId()).isEmpty()) {
             Suscripcion suscripcion = new Suscripcion();
             suscripcion.setEmpresaCliente(empresa);
-            suscripcion.setPlan(PlanSuscripcion.BRONZE);
+            suscripcion.setPlan(PlanSuscripcion.BASICO);
             suscripcion.setEstado(EstadoSuscripcion.ACTIVE);
             suscripcion.setFechaInicio(LocalDate.now());
             suscripcionRepository.save(suscripcion);

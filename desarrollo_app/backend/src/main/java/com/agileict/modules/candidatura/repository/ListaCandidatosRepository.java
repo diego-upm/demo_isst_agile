@@ -19,7 +19,7 @@ public interface ListaCandidatosRepository extends JpaRepository<ListaCandidatos
 
     List<ListaCandidatos> findByProcesoIdAndSolicitudVisibilidadIn(UUID procesoId, Collection<EstadoSolicitudVisibilidad> solicitudVisibilidad);
 
-    Optional<ListaCandidatos> findByProcesoIdAndProfesionalId(UUID procesoId, UUID profesionalId);
+    Optional<ListaCandidatos> findByProcesoIdAndProfesionalIdAndPuestoTicId(UUID procesoId, UUID profesionalId, UUID puestoTicId);
 
-    boolean existsByProcesoIdAndProfesionalId(UUID procesoId, UUID profesionalId);
+    boolean existsByProcesoIdAndProfesionalIdAndPuestoTicId(UUID procesoId, UUID profesionalId, UUID puestoTicId);
 }

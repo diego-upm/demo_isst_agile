@@ -1,6 +1,7 @@
 package com.agileict.modules.puesto.entity;
 
 import com.agileict.modules.proceso.entity.ProcesoHeadhunting;
+import com.agileict.shared.enums.AreaNegocioProfesional;
 import com.agileict.shared.enums.SenioridadPuesto;
 import com.agileict.shared.persistence.BaseEntity;
 import jakarta.persistence.*;
@@ -27,6 +28,16 @@ public class PuestoTIC extends BaseEntity {
 
     @Column(length = 1500)
     private String descripcion;
+
+    @Column(length = 500)
+    private String tecnologiasRequeridas;
+
+    @Column(length = 80)
+    private String tipoContrato;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 64)
+    private AreaNegocioProfesional sectorRequerido;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "proceso_headhunting_id", nullable = false)
@@ -56,6 +67,18 @@ public class PuestoTIC extends BaseEntity {
         return descripcion;
     }
 
+    public String getTecnologiasRequeridas() {
+        return tecnologiasRequeridas;
+    }
+
+    public String getTipoContrato() {
+        return tipoContrato;
+    }
+
+    public AreaNegocioProfesional getSectorRequerido() {
+        return sectorRequerido;
+    }
+
     public ProcesoHeadhunting getProcesoHeadhunting() {
         return procesoHeadhunting;
     }
@@ -82,6 +105,18 @@ public class PuestoTIC extends BaseEntity {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public void setTecnologiasRequeridas(String tecnologiasRequeridas) {
+        this.tecnologiasRequeridas = tecnologiasRequeridas;
+    }
+
+    public void setTipoContrato(String tipoContrato) {
+        this.tipoContrato = tipoContrato;
+    }
+
+    public void setSectorRequerido(AreaNegocioProfesional sectorRequerido) {
+        this.sectorRequerido = sectorRequerido;
     }
 
     public void setProcesoHeadhunting(ProcesoHeadhunting procesoHeadhunting) {

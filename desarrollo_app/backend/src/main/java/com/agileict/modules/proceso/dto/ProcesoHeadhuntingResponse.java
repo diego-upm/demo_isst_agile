@@ -12,11 +12,7 @@ public record ProcesoHeadhuntingResponse(
         String descripcion,
         EstadoProceso estado,
         NivelConfidencialidad nivelConfidencialidad,
-        String tecnologiasRequeridas,
         String nivelExperienciaMinimo,
-        String tipoContrato,
-        Integer rangoSalarialMinimo,
-        Integer rangoSalarialMaximo,
         UUID empresaClienteId,
         UUID responsableRrhhId,
         List<PuestoTicResponse> puestos

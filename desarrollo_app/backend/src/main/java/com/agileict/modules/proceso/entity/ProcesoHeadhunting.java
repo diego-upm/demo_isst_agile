@@ -29,20 +29,8 @@ public class ProcesoHeadhunting extends BaseEntity {
     @Column(nullable = false, length = 32)
     private NivelConfidencialidad nivelConfidencialidad = NivelConfidencialidad.CONFIDENTIAL;
 
-    @Column(length = 500)
-    private String tecnologiasRequeridas;
-
     @Column(length = 120)
     private String nivelExperienciaMinimo;
-
-    @Column(length = 80)
-    private String tipoContrato;
-
-    @Column
-    private Integer rangoSalarialMinimo;
-
-    @Column
-    private Integer rangoSalarialMaximo;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "empresa_cliente_id", nullable = false)
@@ -76,24 +64,8 @@ public class ProcesoHeadhunting extends BaseEntity {
         return nivelConfidencialidad;
     }
 
-    public String getTecnologiasRequeridas() {
-        return tecnologiasRequeridas;
-    }
-
     public String getNivelExperienciaMinimo() {
         return nivelExperienciaMinimo;
-    }
-
-    public String getTipoContrato() {
-        return tipoContrato;
-    }
-
-    public Integer getRangoSalarialMinimo() {
-        return rangoSalarialMinimo;
-    }
-
-    public Integer getRangoSalarialMaximo() {
-        return rangoSalarialMaximo;
     }
 
     public EmpresaCliente getEmpresaCliente() {
@@ -124,24 +96,8 @@ public class ProcesoHeadhunting extends BaseEntity {
         this.nivelConfidencialidad = nivelConfidencialidad;
     }
 
-    public void setTecnologiasRequeridas(String tecnologiasRequeridas) {
-        this.tecnologiasRequeridas = tecnologiasRequeridas;
-    }
-
     public void setNivelExperienciaMinimo(String nivelExperienciaMinimo) {
         this.nivelExperienciaMinimo = nivelExperienciaMinimo;
-    }
-
-    public void setTipoContrato(String tipoContrato) {
-        this.tipoContrato = tipoContrato;
-    }
-
-    public void setRangoSalarialMinimo(Integer rangoSalarialMinimo) {
-        this.rangoSalarialMinimo = rangoSalarialMinimo;
-    }
-
-    public void setRangoSalarialMaximo(Integer rangoSalarialMaximo) {
-        this.rangoSalarialMaximo = rangoSalarialMaximo;
     }
 
     public void setEmpresaCliente(EmpresaCliente empresaCliente) {

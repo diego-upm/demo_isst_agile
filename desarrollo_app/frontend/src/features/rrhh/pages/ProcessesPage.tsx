@@ -139,7 +139,7 @@ export function ProcessesPage() {
               <div>
                 <span className="badge">{mapProcessStatus(process.estado)}</span>
                 <h3>{process.titulo || 'Proceso sin titulo'}</h3>
-                <p>{process.tecnologiasRequeridas || 'Tecnologias sin definir'}</p>
+                <p>{process.descripcion || 'Descripción no indicada'}</p>
               </div>
               <div className="page-actions">
                 <button

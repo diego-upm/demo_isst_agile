@@ -1,6 +1,7 @@
 package com.agileict.modules.candidatura.entity;
 
 import com.agileict.modules.proceso.entity.ProcesoHeadhunting;
+import com.agileict.modules.puesto.entity.PuestoTIC;
 import com.agileict.modules.profesional.entity.ProfesionalSenior;
 import com.agileict.shared.enums.EstadoListaCandidato;
 import com.agileict.shared.enums.EstadoSolicitudVisibilidad;
@@ -25,8 +26,8 @@ import java.util.UUID;
 @Table(
         name = "lista_candidatos",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_lista_candidatos_proceso_profesional",
-                columnNames = {"proceso_id", "profesional_id"}
+            name = "uk_lista_candidatos_proceso_profesional_puesto",
+            columnNames = {"proceso_id", "profesional_id", "puesto_tic_id"}
         )
 )
 public class ListaCandidatos {
@@ -42,6 +43,10 @@ public class ListaCandidatos {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "profesional_id", nullable = false)
     private ProfesionalSenior profesional;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "puesto_tic_id", nullable = false)
+    private PuestoTIC puestoTic;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
@@ -86,6 +91,10 @@ public class ListaCandidatos {
         return profesional;
     }
 
+    public PuestoTIC getPuestoTic() {
+        return puestoTic;
+    }
+
     public EstadoListaCandidato getEstado() {
         return estado;
     }
@@ -112,6 +121,10 @@ public class ListaCandidatos {
 
     public void setProfesional(ProfesionalSenior profesional) {
         this.profesional = profesional;
+    }
+
+    public void setPuestoTic(PuestoTIC puestoTic) {
+        this.puestoTic = puestoTic;
     }
 
     public void setEstado(EstadoListaCandidato estado) {

@@ -7,6 +7,22 @@ export interface SelectionBoardItemResponse {
   candidaturaId: string | null;
   procesoId: string | null;
   procesoTitulo: string | null;
+  procesoDescripcion: string | null;
+  procesoEstado: string | null;
+  procesoNivelConfidencialidad: string | null;
+  procesoNivelExperienciaMinimo: string | null;
+  puesto: {
+    id: string;
+    titulo: string;
+    senioridad: string;
+    modalidad: string | null;
+    ubicacion: string | null;
+    area: string | null;
+    descripcion: string | null;
+    tecnologiasRequeridas: string | null;
+    tipoContrato: string | null;
+    sectorRequerido: string | null;
+  } | null;
   profesionalId: string;
   displayName: string;
   nombre: string | null;
@@ -34,6 +50,18 @@ export interface SelectionBoardItemResponse {
 export interface SelectionBoardResponse {
   procesoId: string;
   procesoTitulo: string;
+  puestos: Array<{
+    id: string;
+    titulo: string;
+    senioridad: string;
+    modalidad: string | null;
+    ubicacion: string | null;
+    area: string | null;
+    descripcion: string | null;
+    tecnologiasRequeridas: string | null;
+    tipoContrato: string | null;
+    sectorRequerido: string | null;
+  }>;
   profesionalesDisponibles: SelectionBoardItemResponse[];
   candidatos: SelectionBoardItemResponse[];
   solicitudesVisibilidad: SelectionBoardItemResponse[];
@@ -41,6 +69,7 @@ export interface SelectionBoardResponse {
 
 export interface CreateCandidateRequest {
   profesionalId: string;
+  puestoTicId: string;
 }
 
 export async function getSelectionBoard(
@@ -58,10 +87,11 @@ export async function addCandidateToProcess(
   token: string,
   procesoId: string,
   profesionalId: string,
+  puestoTicId: string,
 ): Promise<SelectionBoardItemResponse> {
   return apiClient.post<SelectionBoardItemResponse>(
     `/v1/procesos/${encodeURIComponent(procesoId)}/candidatos`,
-    { profesionalId } satisfies CreateCandidateRequest,
+    { profesionalId, puestoTicId } satisfies CreateCandidateRequest,
     { token },
   );
 }

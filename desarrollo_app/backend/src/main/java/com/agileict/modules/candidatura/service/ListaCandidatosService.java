@@ -12,8 +12,10 @@ import com.agileict.modules.candidatura.entity.ListaCandidatos;
 import com.agileict.modules.candidatura.repository.ListaCandidatosRepository;
 import com.agileict.modules.profesional.entity.ProfesionalSenior;
 import com.agileict.modules.profesional.repository.ProfesionalSeniorRepository;
+import com.agileict.modules.proceso.dto.PuestoTicResponse;
 import com.agileict.modules.proceso.entity.ProcesoHeadhunting;
 import com.agileict.modules.proceso.repository.ProcesoHeadhuntingRepository;
+import com.agileict.modules.puesto.entity.PuestoTIC;
 import com.agileict.modules.responsable.entity.ResponsableRrhh;
 import com.agileict.modules.responsable.repository.ResponsableRrhhRepository;
 import com.agileict.shared.enums.EstadoListaCandidato;
@@ -77,9 +79,23 @@ public class ListaCandidatosService {
         return new SelectionBoardResponse(
                 proceso.getId(),
                 proceso.getTitulo(),
-            profesionalesDisponibles,
-            candidatos,
-            solicitudesVisibilidad
+            proceso.getPuestos().stream()
+                .map(puesto -> new PuestoTicResponse(
+                    puesto.getId(),
+                    puesto.getTitulo(),
+                    puesto.getSenioridad(),
+                    puesto.getModalidad(),
+                    puesto.getUbicacion(),
+                    puesto.getArea(),
+                    puesto.getDescripcion(),
+                    puesto.getTecnologiasRequeridas(),
+                    puesto.getTipoContrato(),
+                    puesto.getSectorRequerido()
+                ))
+                .toList(),
+                profesionalesDisponibles,
+                candidatos,
+                solicitudesVisibilidad
         );
     }
 
@@ -93,13 +109,19 @@ public class ListaCandidatosService {
             throw new BusinessException("El profesional indicado no está activo.");
         }
 
-        if (listaCandidatosRepository.existsByProcesoIdAndProfesionalId(procesoId, profesional.getId())) {
-            throw new BusinessException("Ese profesional ya está asociado al proceso.");
+        PuestoTIC puesto = proceso.getPuestos().stream()
+                .filter(p -> p.getId().equals(request.puestoTicId()))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException("El puesto seleccionado no pertenece al proceso."));
+
+        if (listaCandidatosRepository.existsByProcesoIdAndProfesionalIdAndPuestoTicId(procesoId, profesional.getId(), puesto.getId())) {
+            throw new BusinessException("Ese profesional ya está asociado al puesto seleccionado.");
         }
 
         ListaCandidatos candidatura = new ListaCandidatos();
         candidatura.setProceso(proceso);
         candidatura.setProfesional(profesional);
+        candidatura.setPuestoTic(puesto);
         candidatura.setEstado(EstadoListaCandidato.PENDIENTE);
         candidatura.setSolicitudVisibilidad(EstadoSolicitudVisibilidad.NO_SOLICITADO);
 
@@ -245,22 +267,27 @@ public class ListaCandidatosService {
                 null,
                 null,
                 null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 profesional.getId(),
                 anonymousLabel(profesional.getId()),
-            null,
-            null,
                 null,
-            null,
+                null,
+                null,
+                null,
                 profesional.getTecnologiasClave(),
-            profesional.getTitulacionesAcademicas(),
-            profesional.getIdiomas(),
-            profesional.getSoftSkills(),
+                profesional.getTitulacionesAcademicas(),
+                profesional.getIdiomas(),
+                profesional.getSoftSkills(),
                 profesional.getAniosExperiencia(),
-            profesional.getRangoSalarialEsperadoMin(),
-            profesional.getRangoSalarialEsperadoMax(),
-            profesional.getAreaNegocio(),
-            profesional.getAreaNegocio() == null ? null : profesional.getAreaNegocio().name(),
-            profesional.isActivo(),
+                profesional.getRangoSalarialEsperadoMin(),
+                profesional.getRangoSalarialEsperadoMax(),
+                profesional.getAreaNegocio(),
+                profesional.getAreaNegocio() == null ? null : profesional.getAreaNegocio().name(),
+                profesional.isActivo(),
                 profesional.getDisponibilidad(),
                 null,
                 null,
@@ -272,28 +299,45 @@ public class ListaCandidatosService {
 
     private ListaCandidatosResponse toResponse(ListaCandidatos candidatura) {
         ProfesionalSenior profesional = candidatura.getProfesional();
+        PuestoTIC puesto = candidatura.getPuestoTic();
         boolean identityVisible = candidatura.getSolicitudVisibilidad() == EstadoSolicitudVisibilidad.ACEPTADO;
 
         return new ListaCandidatosResponse(
                 candidatura.getId(),
                 candidatura.getProceso().getId(),
                 candidatura.getProceso().getTitulo(),
+                candidatura.getProceso().getDescripcion(),
+                candidatura.getProceso().getEstado(),
+                candidatura.getProceso().getNivelConfidencialidad(),
+                candidatura.getProceso().getNivelExperienciaMinimo(),
+                new PuestoTicResponse(
+                    puesto.getId(),
+                    puesto.getTitulo(),
+                    puesto.getSenioridad(),
+                    puesto.getModalidad(),
+                    puesto.getUbicacion(),
+                    puesto.getArea(),
+                    puesto.getDescripcion(),
+                    puesto.getTecnologiasRequeridas(),
+                    puesto.getTipoContrato(),
+                    puesto.getSectorRequerido()
+                ),
                 profesional.getId(),
                 identityVisible ? fullName(profesional) : anonymousLabel(profesional.getId()),
-            identityVisible ? profesional.getNombre() : null,
-            identityVisible ? profesional.getApellidos() : null,
+                identityVisible ? profesional.getNombre() : null,
+                identityVisible ? profesional.getApellidos() : null,
                 identityVisible ? profesional.getEmail() : null,
-            identityVisible ? profesional.getDescripcionPersonal() : null,
+                identityVisible ? profesional.getDescripcionPersonal() : null,
                 profesional.getTecnologiasClave(),
-            profesional.getTitulacionesAcademicas(),
-            profesional.getIdiomas(),
-            profesional.getSoftSkills(),
+                profesional.getTitulacionesAcademicas(),
+                profesional.getIdiomas(),
+                profesional.getSoftSkills(),
                 profesional.getAniosExperiencia(),
-            identityVisible ? profesional.getRangoSalarialEsperadoMin() : null,
-            identityVisible ? profesional.getRangoSalarialEsperadoMax() : null,
-            profesional.getAreaNegocio(),
-            profesional.getAreaNegocio() == null ? null : profesional.getAreaNegocio().name(),
-            profesional.isActivo(),
+                identityVisible ? profesional.getRangoSalarialEsperadoMin() : null,
+                identityVisible ? profesional.getRangoSalarialEsperadoMax() : null,
+                profesional.getAreaNegocio(),
+                profesional.getAreaNegocio() == null ? null : profesional.getAreaNegocio().name(),
+                profesional.isActivo(),
                 profesional.getDisponibilidad(),
                 candidatura.getEstado(),
                 candidatura.getSolicitudVisibilidad(),

@@ -7,7 +7,6 @@ public record ResponsableRrhhResponse(
         String nombre,
         String apellidos,
         String email,
-        String cargo,
         UUID empresaClienteId,
         String empresaClienteNombre,
         String empresaClienteSector
