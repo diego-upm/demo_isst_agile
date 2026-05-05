@@ -1,0 +1,14 @@
+psql -U agileict -d agileict
+
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public';
+
+SELECT * FROM user_account;
+
+SELECT id, email, enabled
+FROM user_account;
+
+SELECT *
+FROM role
+WHERE name = 'ADMIN';
