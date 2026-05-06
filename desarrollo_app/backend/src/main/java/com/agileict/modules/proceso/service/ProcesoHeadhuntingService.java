@@ -6,6 +6,7 @@ import com.agileict.common.util.SecurityUtils;
 import com.agileict.modules.empresa.entity.EmpresaCliente;
 import com.agileict.modules.empresa.repository.EmpresaClienteRepository;
 import com.agileict.modules.proceso.dto.CreateProcesoRequest;
+import com.agileict.modules.proceso.dto.CreateProcesoWithSuggestionsResponse;
 import com.agileict.modules.proceso.dto.ProcesoHeadhuntingResponse;
 import com.agileict.modules.proceso.dto.PuestoTicResponse;
 import com.agileict.modules.proceso.entity.ProcesoHeadhunting;
@@ -25,13 +26,16 @@ public class ProcesoHeadhuntingService {
     private final ProcesoHeadhuntingRepository procesoHeadhuntingRepository;
     private final EmpresaClienteRepository empresaClienteRepository;
     private final ResponsableRrhhRepository responsableRrhhRepository;
+    private final CandidatosSugeridosService candidatosSugeridosService;
 
     public ProcesoHeadhuntingService(ProcesoHeadhuntingRepository procesoHeadhuntingRepository,
                                      EmpresaClienteRepository empresaClienteRepository,
-                                     ResponsableRrhhRepository responsableRrhhRepository) {
+                                     ResponsableRrhhRepository responsableRrhhRepository,
+                                     CandidatosSugeridosService candidatosSugeridosService) {
         this.procesoHeadhuntingRepository = procesoHeadhuntingRepository;
         this.empresaClienteRepository = empresaClienteRepository;
         this.responsableRrhhRepository = responsableRrhhRepository;
+        this.candidatosSugeridosService = candidatosSugeridosService;
     }
 
     @Transactional(readOnly = true)
@@ -51,7 +55,7 @@ public class ProcesoHeadhuntingService {
     }
 
     @Transactional
-    public ProcesoHeadhuntingResponse create(CreateProcesoRequest request) {
+    public CreateProcesoWithSuggestionsResponse create(CreateProcesoRequest request) {
         EmpresaCliente empresa = empresaClienteRepository.findById(request.empresaClienteId())
                 .orElseThrow(() -> new ResourceNotFoundException("No existe la empresa cliente indicada."));
 
@@ -82,7 +86,10 @@ public class ProcesoHeadhuntingService {
             });
         }
 
-        return toResponse(procesoHeadhuntingRepository.save(proceso));
+        ProcesoHeadhunting saved = procesoHeadhuntingRepository.save(proceso);
+        var sugeridos = candidatosSugeridosService.getSuggestions(saved);
+
+        return new CreateProcesoWithSuggestionsResponse(toResponse(saved), sugeridos);
     }
 
     @Transactional

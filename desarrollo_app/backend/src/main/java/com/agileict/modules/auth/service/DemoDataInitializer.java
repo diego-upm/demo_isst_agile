@@ -124,6 +124,82 @@ public class DemoDataInitializer implements CommandLineRunner {
         profesional.setUserAccount(professionalAccount);
         profesionalSeniorRepository.save(profesional);
 
+        // ── Additional demo professionals ──────────────────────────────────────────
+        createProfessionalIfAbsent(
+                "pro2@agileict.local", "demo1234",
+                "Ana", "González",
+                "Python, TensorFlow, PyTorch, Scikit-learn, Data Engineering",
+                "Grado en Matemáticas, Máster en Inteligencia Artificial",
+                "Inglés C2, Alemán B1",
+                "Pensamiento analítico, resolución de problemas, comunicación",
+                9, 50000, 70000,
+                "Especialista en ML y análisis de datos con foco en producción.",
+                AreaNegocioProfesional.INTELIGENCIA_ARTIFICIAL,
+                DisponibilidadProfesional.AVAILABLE,
+                UUID.fromString("55555555-5555-5555-5555-555555555555"),
+                professionalRole
+        );
+
+        createProfessionalIfAbsent(
+                "pro3@agileict.local", "demo1234",
+                "Miguel", "Fernández",
+                "React, TypeScript, Node.js, AWS, GraphQL",
+                "Grado en Ingeniería Informática",
+                "Inglés B2",
+                "Creatividad, autonomía, adaptabilidad, trabajo en equipo",
+                6, 38000, 52000,
+                "Desarrollador fullstack especializado en arquitecturas cloud.",
+                AreaNegocioProfesional.TECNOLOGIA_IT,
+                DisponibilidadProfesional.OPEN_TO_OFFERS,
+                UUID.fromString("66666666-6666-6666-6666-666666666666"),
+                professionalRole
+        );
+
+        createProfessionalIfAbsent(
+                "pro4@agileict.local", "demo1234",
+                "Sofía", "Martínez",
+                "Kubernetes, Docker, Terraform, CI/CD, Azure, GCP",
+                "Grado en Sistemas Informáticos, Certificación CKA",
+                "Inglés C1, Francés A2",
+                "Liderazgo técnico, planificación, metodologías ágiles",
+                10, 55000, 75000,
+                "Ingeniera DevOps con amplia experiencia en plataformas cloud.",
+                AreaNegocioProfesional.TECNOLOGIA_IT,
+                DisponibilidadProfesional.AVAILABLE,
+                UUID.fromString("77777777-7777-7777-7777-777777777777"),
+                professionalRole
+        );
+
+        createProfessionalIfAbsent(
+                "pro5@agileict.local", "demo1234",
+                "Javier", "López",
+                "Penetration Testing, SIEM, SOC, Splunk, ISO 27001",
+                "Grado en Seguridad Informática, CISSP",
+                "Inglés C1",
+                "Pensamiento crítico, atención al detalle, ética profesional",
+                8, 48000, 65000,
+                "Especialista en ciberseguridad ofensiva y defensiva.",
+                AreaNegocioProfesional.CIBERSEGURIDAD,
+                DisponibilidadProfesional.OPEN_TO_OFFERS,
+                UUID.fromString("88888888-8888-8888-8888-888888888888"),
+                professionalRole
+        );
+
+        createProfessionalIfAbsent(
+                "pro6@agileict.local", "demo1234",
+                "Laura", "Rodríguez",
+                "Spark, Kafka, Hadoop, SQL, dbt, Databricks",
+                "Grado en Estadística, Máster en Big Data",
+                "Inglés C1, Portugués B2",
+                "Analítica, proactividad, gestión de proyectos",
+                7, 45000, 62000,
+                "Data Engineer especializada en pipelines de datos a gran escala.",
+                AreaNegocioProfesional.DATA_ANALYTICS,
+                DisponibilidadProfesional.AVAILABLE,
+                UUID.fromString("99999999-9999-9999-9999-999999999999"),
+                professionalRole
+        );
+
         if (!userAccountRepository.existsByEmail("admin@agileict.local")) {
             UserAccount adminAccount = new UserAccount();
             adminAccount.setEmail("admin@agileict.local");
@@ -136,5 +212,47 @@ public class DemoDataInitializer implements CommandLineRunner {
     private Role ensureRole(RoleName roleName) {
         return roleRepository.findByName(roleName)
                 .orElseGet(() -> roleRepository.save(new Role(roleName)));
+    }
+
+    private void createProfessionalIfAbsent(
+            String email, String password,
+            String nombre, String apellidos,
+            String tecnologias, String titulaciones,
+            String idiomas, String softSkills,
+            int anios, int salMin, int salMax,
+            String descripcion,
+            AreaNegocioProfesional area,
+            DisponibilidadProfesional disponibilidad,
+            UUID id, Role role) {
+
+        if (profesionalSeniorRepository.findByEmail(email).isPresent()) {
+            return;
+        }
+
+        UserAccount account = new UserAccount();
+        account.setEmail(email);
+        account.setPasswordHash(passwordEncoder.encode(password));
+        account.getRoles().add(role);
+        userAccountRepository.save(account);
+
+        ProfesionalSenior p = new ProfesionalSenior();
+        p.setId(id);
+        p.setNombre(nombre);
+        p.setApellidos(apellidos);
+        p.setEmail(email);
+        p.setTecnologiasClave(tecnologias);
+        p.setTitulacionesAcademicas(titulaciones);
+        p.setIdiomas(idiomas);
+        p.setSoftSkills(softSkills);
+        p.setAniosExperiencia(anios);
+        p.setRangoSalarialEsperadoMin(salMin);
+        p.setRangoSalarialEsperadoMax(salMax);
+        p.setDescripcionPersonal(descripcion);
+        p.setAreaNegocio(area);
+        p.setDisponibilidad(disponibilidad);
+        p.setPerfilVisible(true);
+        p.setActivo(true);
+        p.setUserAccount(account);
+        profesionalSeniorRepository.save(p);
     }
 }

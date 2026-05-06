@@ -10,11 +10,12 @@ import com.agileict.modules.candidatura.dto.ListaCandidatosResponse;
 import com.agileict.modules.candidatura.dto.SelectionBoardResponse;
 import com.agileict.modules.candidatura.entity.ListaCandidatos;
 import com.agileict.modules.candidatura.repository.ListaCandidatosRepository;
-import com.agileict.modules.profesional.entity.ProfesionalSenior;
-import com.agileict.modules.profesional.repository.ProfesionalSeniorRepository;
 import com.agileict.modules.proceso.dto.PuestoTicResponse;
 import com.agileict.modules.proceso.entity.ProcesoHeadhunting;
 import com.agileict.modules.proceso.repository.ProcesoHeadhuntingRepository;
+import com.agileict.modules.proceso.service.CandidatosSugeridosService;
+import com.agileict.modules.profesional.entity.ProfesionalSenior;
+import com.agileict.modules.profesional.repository.ProfesionalSeniorRepository;
 import com.agileict.modules.puesto.entity.PuestoTIC;
 import com.agileict.modules.responsable.entity.ResponsableRrhh;
 import com.agileict.modules.responsable.repository.ResponsableRrhhRepository;
@@ -38,15 +39,18 @@ public class ListaCandidatosService {
     private final ProcesoHeadhuntingRepository procesoHeadhuntingRepository;
     private final ResponsableRrhhRepository responsableRrhhRepository;
     private final ProfesionalSeniorRepository profesionalSeniorRepository;
+    private final CandidatosSugeridosService candidatosSugeridosService;
 
     public ListaCandidatosService(ListaCandidatosRepository listaCandidatosRepository,
                                   ProcesoHeadhuntingRepository procesoHeadhuntingRepository,
                                   ResponsableRrhhRepository responsableRrhhRepository,
-                                  ProfesionalSeniorRepository profesionalSeniorRepository) {
+                                  ProfesionalSeniorRepository profesionalSeniorRepository,
+                                  CandidatosSugeridosService candidatosSugeridosService) {
         this.listaCandidatosRepository = listaCandidatosRepository;
         this.procesoHeadhuntingRepository = procesoHeadhuntingRepository;
         this.responsableRrhhRepository = responsableRrhhRepository;
         this.profesionalSeniorRepository = profesionalSeniorRepository;
+        this.candidatosSugeridosService = candidatosSugeridosService;
     }
 
     @Transactional(readOnly = true)
@@ -69,30 +73,43 @@ public class ListaCandidatosService {
                 .map(this::toResponse)
                 .toList();
 
-        List<ListaCandidatosResponse> profesionalesDisponibles = profesionalSeniorRepository.searchActiveProfessionals(normalizedSearch)
+        // candidatosSugeridos: always the top matches, excluding already added candidates
+        List<ListaCandidatosResponse> sugeridos = candidatosSugeridosService.getSuggestions(proceso)
                 .stream()
-                .filter(profesional -> !candidaturasPorProfesional.containsKey(profesional.getId()))
-                .sorted(Comparator.comparing(ProfesionalSenior::getApellidos).thenComparing(ProfesionalSenior::getNombre))
-                .map(profesional -> toAvailableResponse(profesional))
+                .filter(s -> !candidaturasPorProfesional.containsKey(s.profesionalId()))
                 .toList();
+
+        // profesionalesDisponibles: only populated when there is an active search
+        List<ListaCandidatosResponse> profesionalesDisponibles;
+        if (normalizedSearch != null) {
+            profesionalesDisponibles = profesionalSeniorRepository.searchActiveProfessionals(normalizedSearch)
+                    .stream()
+                    .filter(profesional -> !candidaturasPorProfesional.containsKey(profesional.getId()))
+                    .sorted(Comparator.comparing(ProfesionalSenior::getApellidos).thenComparing(ProfesionalSenior::getNombre))
+                    .map(this::toAvailableResponse)
+                    .toList();
+        } else {
+            profesionalesDisponibles = List.of();
+        }
 
         return new SelectionBoardResponse(
                 proceso.getId(),
                 proceso.getTitulo(),
-            proceso.getPuestos().stream()
-                .map(puesto -> new PuestoTicResponse(
-                    puesto.getId(),
-                    puesto.getTitulo(),
-                    puesto.getSenioridad(),
-                    puesto.getModalidad(),
-                    puesto.getUbicacion(),
-                    puesto.getArea(),
-                    puesto.getDescripcion(),
-                    puesto.getTecnologiasRequeridas(),
-                    puesto.getTipoContrato(),
-                    puesto.getSectorRequerido()
-                ))
-                .toList(),
+                proceso.getPuestos().stream()
+                    .map(puesto -> new PuestoTicResponse(
+                        puesto.getId(),
+                        puesto.getTitulo(),
+                        puesto.getSenioridad(),
+                        puesto.getModalidad(),
+                        puesto.getUbicacion(),
+                        puesto.getArea(),
+                        puesto.getDescripcion(),
+                        puesto.getTecnologiasRequeridas(),
+                        puesto.getTipoContrato(),
+                        puesto.getSectorRequerido()
+                    ))
+                    .toList(),
+                sugeridos,
                 profesionalesDisponibles,
                 candidatos,
                 solicitudesVisibilidad
@@ -158,7 +175,7 @@ public class ListaCandidatosService {
 
         return listaCandidatosRepository.findByProfesionalId(profesional.getId())
                 .stream()
-            .sorted(Comparator.comparing(ListaCandidatos::getFechaActualizacion).reversed())
+                .sorted(Comparator.comparing(ListaCandidatos::getFechaActualizacion).reversed())
                 .map(this::toResponse)
                 .toList();
     }
@@ -264,20 +281,10 @@ public class ListaCandidatosService {
 
     private ListaCandidatosResponse toAvailableResponse(ProfesionalSenior profesional) {
         return new ListaCandidatosResponse(
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
+                null, null, null, null, null, null, null, null,
                 profesional.getId(),
                 anonymousLabel(profesional.getId()),
-                null,
-                null,
-                null,
-                null,
+                null, null, null, null,
                 profesional.getTecnologiasClave(),
                 profesional.getTitulacionesAcademicas(),
                 profesional.getIdiomas(),
@@ -289,10 +296,7 @@ public class ListaCandidatosService {
                 profesional.getAreaNegocio() == null ? null : profesional.getAreaNegocio().name(),
                 profesional.isActivo(),
                 profesional.getDisponibilidad(),
-                null,
-                null,
-                null,
-                null,
+                null, null, null, null,
                 true
         );
     }
@@ -352,15 +356,11 @@ public class ListaCandidatosService {
     }
 
     private String anonymousLabel(UUID id) {
-        String token = id.toString().substring(0, 8).toUpperCase(Locale.ROOT);
-        return "Candidato anónimo #" + token;
+        return "Candidato anónimo #" + id.toString().substring(0, 8).toUpperCase(Locale.ROOT);
     }
 
     private String normalizeSearch(String search) {
-        if (search == null) {
-            return null;
-        }
-
+        if (search == null) return null;
         String trimmed = search.trim();
         return trimmed.isEmpty() ? null : trimmed;
     }

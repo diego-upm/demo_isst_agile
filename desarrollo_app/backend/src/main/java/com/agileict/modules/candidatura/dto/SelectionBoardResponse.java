@@ -9,6 +9,7 @@ public record SelectionBoardResponse(
         UUID procesoId,
         String procesoTitulo,
         List<PuestoTicResponse> puestos,
+        List<ListaCandidatosResponse> candidatosSugeridos,
         List<ListaCandidatosResponse> profesionalesDisponibles,
         List<ListaCandidatosResponse> candidatos,
         List<ListaCandidatosResponse> solicitudesVisibilidad

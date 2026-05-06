@@ -41,7 +41,7 @@ function mapConfidentiality(value?: string | null): string {
 }
 
 function formatProcessPositionSummary(position: NonNullable<SelectionBoardItemResponse['puesto']>): string {
-  const parts = [position.senioridad, position.modalidad, position.area, position.ubicacion]
+  const parts = [position.modalidad, position.area, position.ubicacion]
     .filter((value) => value && value.trim() !== '')
     .join(' · ');
 
@@ -346,7 +346,6 @@ export function ProfessionalDashboardPage() {
                 <div key={visibleDetailsModalItem.puesto.id} className="selection-item">
                   <div className="selection-item-header">
                     <strong>{visibleDetailsModalItem.puesto.titulo}</strong>
-                    <span className="status-chip status-chip-info">{visibleDetailsModalItem.puesto.senioridad}</span>
                   </div>
                   <p className="selection-item-muted">{formatProcessPositionSummary(visibleDetailsModalItem.puesto)}</p>
                   <dl className="description-list">

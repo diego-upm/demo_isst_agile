@@ -10,7 +10,7 @@ import {
   type SelectionBoardItemResponse,
   type SelectionBoardResponse,
 } from '../services/selectionService';
-import { BUSINESS_AREA_OPTIONS, getBusinessAreaLabel } from '../../professional/types/businessAreas';
+import { getBusinessAreaLabel } from '../../professional/types/businessAreas';
 
 function mapCandidateState(state?: string | null): string {
   if (state === 'ACEPTADO') return 'Aceptado';
@@ -61,6 +61,7 @@ export function SelectionPage() {
   const [showAvailableFilters, setShowAvailableFilters] = useState(false);
   const [minimumExperienceFilter, setMinimumExperienceFilter] = useState('');
   const [businessAreaFilter, setBusinessAreaFilter] = useState('');
+  const [activePuestoTabId, setActivePuestoTabId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!processId || !token) {
@@ -81,6 +82,7 @@ export function SelectionPage() {
           }
 
           setBoard(response);
+          setActivePuestoTabId((prev) => prev ?? response.puestos[0]?.id ?? null);
         } catch (err) {
           if (!isMounted) {
             return;
@@ -103,7 +105,7 @@ export function SelectionPage() {
 
   const visibleCounts = useMemo(
     () => ({
-      disponibles: board?.profesionalesDisponibles.length ?? 0,
+      sugeridos: board?.candidatosSugeridos.length ?? 0,
       candidatos: board?.candidatos.length ?? 0,
       solicitudes: board?.solicitudesVisibilidad.length ?? 0,
     }),
@@ -132,27 +134,6 @@ export function SelectionPage() {
     });
   }, [board?.profesionalesDisponibles, businessAreaFilter, minimumExperienceFilter]);
 
-  const availableCountLabel = useMemo(() => {
-    const total = visibleCounts.disponibles;
-    const filtered = filteredAvailableProfessionals.length;
-
-    if (total === filtered) {
-      return `${filtered}`;
-    }
-
-    return `${filtered} / ${total}`;
-  }, [filteredAvailableProfessionals.length, visibleCounts.disponibles]);
-
-  function clearAvailableFilters(): void {
-    setMinimumExperienceFilter('');
-    setBusinessAreaFilter('');
-  }
-
-  function handleOpenAddCandidate(item: SelectionBoardItemResponse) {
-    const defaultPuestoId = board?.puestos[0]?.id ?? '';
-    setPendingAddCandidate(item);
-    setSelectedPuestoId(defaultPuestoId);
-  }
 
   function handleCloseAddCandidate() {
     setPendingAddCandidate(null);
@@ -404,7 +385,7 @@ export function SelectionPage() {
             </label>
             <div className="selection-toolbar-meta">
               <p>
-                {visibleCounts.disponibles} disponibles · {visibleCounts.candidatos} candidatos ·{' '}
+                {visibleCounts.sugeridos} recomendados · {visibleCounts.candidatos} candidatos ·{' '}
                 {visibleCounts.solicitudes} solicitudes de visibilidad
               </p>
               <button type="submit" className="button button-secondary">
@@ -415,246 +396,336 @@ export function SelectionPage() {
 
           {isLoading ? <div className="card">Cargando selección...</div> : null}
 
-          <div className="selection-board">
-            <article className="card selection-column">
-              <div className="selection-column-header">
-                <div>
-                  <h3>Buscador de profesionales</h3>
-                  <p>Todos los candidatos aparecen por defecto. El filtro solo afecta a esta columna.</p>
-                </div>
-                <span className="badge">{availableCountLabel}</span>
+          {/* ── Tabs de puestos ── */}
+          {board && board.puestos.length > 0 ? (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  flexWrap: 'wrap',
+                  borderBottom: '2px solid var(--color-border, #333)',
+                  marginBottom: '1.5rem',
+                }}
+              >
+                {board.puestos.map((puesto) => {
+                  const isActive = activePuestoTabId === puesto.id;
+                  const candidatosDePuesto = board.candidatos.filter((c) => c.puesto?.id === puesto.id).length;
+                  return (
+                    <button
+                      key={puesto.id}
+                      type="button"
+                      onClick={() => setActivePuestoTabId(puesto.id)}
+                      style={{
+                        padding: '0.6rem 1.1rem',
+                        border: 'none',
+                        borderBottom: isActive ? '2px solid var(--color-primary, #6366f1)' : '2px solid transparent',
+                        marginBottom: '-2px',
+                        background: 'none',
+                        color: isActive ? 'var(--color-primary, #6366f1)' : 'var(--color-text-muted, #aaa)',
+                        fontWeight: isActive ? 700 : 400,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        fontSize: '0.95rem',
+                        transition: 'color 0.15s',
+                      }}
+                    >
+                      {puesto.titulo}
+                      {candidatosDePuesto > 0 && (
+                        <span className="badge">{candidatosDePuesto}</span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="selection-filter-shell">
-                <button
-                  type="button"
-                  className="button button-secondary button-small selection-filter-toggle"
-                  onClick={() => setShowAvailableFilters((current) => !current)}
-                >
-                  {showAvailableFilters ? 'Ocultar filtros' : 'Filtrar'}
-                </button>
+              {board.puestos.map((puesto) => {
+                if (activePuestoTabId !== puesto.id) return null;
 
-                {showAvailableFilters ? (
-                  <div className="selection-filter-panel">
-                    <div className="selection-filter-grid">
-                      <label>
-                        <span>Años mínimos de experiencia</span>
-                        <input
-                          type="number"
-                          min={0}
-                          max={60}
-                          placeholder="Ej. 5"
-                          value={minimumExperienceFilter}
-                          onChange={(event) => setMinimumExperienceFilter(event.target.value)}
-                        />
-                      </label>
+                const candidatosDePuesto = board.candidatos.filter((c) => c.puesto?.id === puesto.id);
+                const solicitudesDePuesto = board.solicitudesVisibilidad.filter((c) => c.puesto?.id === puesto.id);
 
-                      <label>
-                        <span>Área de negocio</span>
-                        <select value={businessAreaFilter} onChange={(event) => setBusinessAreaFilter(event.target.value)}>
-                          <option value="">Todas</option>
-                          {BUSINESS_AREA_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
-
-                    <div className="selection-filter-actions">
-                      <button type="button" className="button button-secondary button-small" onClick={clearAvailableFilters}>
-                        Limpiar
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="selection-list">
-                {filteredAvailableProfessionals.length ? (
-                  filteredAvailableProfessionals.map((item) => {
-                    const cardKey = `disponible-${item.profesionalId}`;
-                    const detailsOpen = Boolean(expandedDetailCards[cardKey]);
-
-                    return (
-                    <div key={item.profesionalId} className="selection-item">
-                      <div>
-                        <div className="selection-item-header">
-                          <strong>{item.displayName}</strong>
-                          <span className={item.anonimo ? 'status-chip status-chip-neutral' : 'status-chip status-chip-info'}>
-                            {item.anonimo ? 'Anónimo' : 'Visible'}
-                          </span>
-                        </div>
-                        <p>{renderCollapsedSummary(item)}</p>
-                        {detailsOpen ? renderDetails(item) : null}
+                return (
+                  <div key={puesto.id}>
+                    {/* Info del puesto */}
+                    <div className="card" style={{ marginBottom: '1rem', padding: '0.85rem 1rem' }}>
+                      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <strong style={{ fontSize: '1rem' }}>{puesto.titulo}</strong>
+                        {puesto.modalidad && <span className="status-chip status-chip-neutral">{puesto.modalidad}</span>}
+                        {puesto.ubicacion && <span style={{ color: 'var(--color-text-muted, #aaa)', fontSize: '0.85rem' }}>📍 {puesto.ubicacion}</span>}
+                        {puesto.tipoContrato && <span style={{ color: 'var(--color-text-muted, #aaa)', fontSize: '0.85rem' }}>{puesto.tipoContrato}</span>}
                       </div>
-
-                      <div className="selection-item-actions">
-                        <button
-                          type="button"
-                          className="button button-secondary button-small"
-                          onClick={() => handleOpenDetails(item, cardKey)}
-                        >
-                          {isIdentityVisible(item)
-                            ? 'Ver detalles'
-                            : detailsOpen
-                              ? 'Ocultar detalles'
-                              : 'Ver detalles'}
-                        </button>
-                        <button
-                          type="button"
-                          className="button button-secondary button-small"
-                          onClick={() => handleOpenAddCandidate(item)}
-                          disabled={busyCandidateId === item.profesionalId}
-                        >
-                          {busyCandidateId === item.profesionalId ? 'Añadiendo...' : 'Añadir'}
-                        </button>
-                      </div>
-                    </div>
-                  );})
-                ) : (
-                  <div className="selection-empty">No hay profesionales que coincidan con el filtro actual.</div>
-                )}
-              </div>
-            </article>
-
-            <article className="card selection-column">
-              <div className="selection-column-header">
-                <div>
-                  <h3>Candidatos solicitados</h3>
-                  <p>Profesionales ya asociados al proceso con su estado de candidatura.</p>
-                </div>
-                <span className="badge">{visibleCounts.candidatos}</span>
-              </div>
-
-              <div className="selection-list">
-                {board?.candidatos.length ? (
-                  board.candidatos.map((item) => {
-                    const cardKey = `candidato-${item.candidaturaId ?? item.profesionalId}`;
-                    const detailsOpen = Boolean(expandedDetailCards[cardKey]);
-
-                    return (
-                    <div key={item.candidaturaId ?? item.profesionalId} className="selection-item">
-                      <div>
-                        <div className="selection-item-header">
-                          <strong>{item.displayName}</strong>
-                          <span className="status-chip status-chip-state">{mapCandidateState(item.estado)}</span>
-                        </div>
-                        <p>{renderCollapsedSummary(item)}</p>
-                        <p className="selection-item-muted">
-                          {mapVisibilityState(item.solicitudVisibilidad)} ·{' '}
-                          {formatExperience(item.aniosExperiencia)}
+                      {puesto.descripcion && (
+                        <p style={{ marginTop: '0.4rem', marginBottom: 0, fontSize: '0.85rem', color: 'var(--color-text-muted, #aaa)' }}>
+                          {puesto.descripcion}
                         </p>
-                        <p className="selection-item-muted">
-                          Puesto invitado: {item.puesto?.titulo || 'No indicado'}
+                      )}
+                      {puesto.tecnologiasRequeridas && (
+                        <p style={{ marginTop: '0.25rem', marginBottom: 0, fontSize: '0.82rem', color: 'var(--color-text-muted, #aaa)' }}>
+                          🔧 {puesto.tecnologiasRequeridas}
                         </p>
-                        {detailsOpen ? renderDetails(item) : null}
-                      </div>
+                      )}
+                    </div>
 
-                      <div className="selection-item-actions">
-                        <button
-                          type="button"
-                          className="button button-secondary button-small"
-                          onClick={() => handleOpenDetails(item, cardKey)}
-                        >
-                          {isIdentityVisible(item)
-                            ? 'Ver detalles'
-                            : detailsOpen
-                              ? 'Ocultar detalles'
-                              : 'Ver detalles'}
-                        </button>
-                        {item.solicitudVisibilidad === 'NO_SOLICITADO' && item.candidaturaId ? (
+                    <div className="selection-board">
+                      {/* ── Candidatos recomendados ── */}
+                      <article className="card selection-column">
+                        <div className="selection-column-header">
+                          <div>
+                            <h3>Candidatos recomendados</h3>
+                            <p>Los mejores perfiles según el sistema.</p>
+                          </div>
+                          <span className="badge">{board.candidatosSugeridos.length}</span>
+                        </div>
+
+                        <div className="selection-list" style={{ marginBottom: '1.25rem' }}>
+                          {board.candidatosSugeridos.length ? (
+                            board.candidatosSugeridos.map((item, index) => {
+                              const cardKey = `sugerido-${puesto.id}-${item.profesionalId}`;
+                              const detailsOpen = Boolean(expandedDetailCards[cardKey]);
+                              return (
+                                <div key={item.profesionalId} className="selection-item">
+                                  <div>
+                                    <div className="selection-item-header">
+                                      <strong>{item.displayName}</strong>
+                                      <span className="badge">#{index + 1}</span>
+                                    </div>
+                                    <p>{renderCollapsedSummary(item)}</p>
+                                    {item.aniosExperiencia != null && (
+                                      <p className="selection-item-muted">{item.aniosExperiencia} años de experiencia</p>
+                                    )}
+                                    {detailsOpen ? renderDetails(item) : null}
+                                  </div>
+                                  <div className="selection-item-actions">
+                                    <button
+                                      type="button"
+                                      className="button button-secondary button-small"
+                                      onClick={() => handleOpenDetails(item, cardKey)}
+                                    >
+                                      {detailsOpen ? 'Ocultar detalles' : 'Ver detalles'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="button button-secondary button-small"
+                                      onClick={() => {
+                                        setPendingAddCandidate(item);
+                                        setSelectedPuestoId(puesto.id);
+                                      }}
+                                      disabled={busyCandidateId === item.profesionalId}
+                                    >
+                                      {busyCandidateId === item.profesionalId ? 'Añadiendo...' : 'Añadir'}
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="selection-empty">No hay candidatos recomendados disponibles.</div>
+                          )}
+                        </div>
+
+                        {/* ── Buscador completo ── */}
+                        <div style={{ borderTop: '1px solid var(--color-border, #333)', paddingTop: '1rem' }}>
                           <button
                             type="button"
                             className="button button-secondary button-small"
-                            onClick={() => void handleRequestVisibility(item)}
-                            disabled={busyCandidateId === item.candidaturaId || item.estado !== 'ACEPTADO'}
-                            title={
-                              item.estado !== 'ACEPTADO'
-                                ? 'Solo puedes solicitar visibilidad cuando el candidato acepte la candidatura.'
-                                : undefined
-                            }
+                            style={{ width: '100%', marginBottom: showAvailableFilters ? '0.75rem' : 0 }}
+                            onClick={() => setShowAvailableFilters((v) => !v)}
                           >
-                            {busyCandidateId === item.candidaturaId ? 'Solicitando...' : 'Visibilidad'}
+                            {showAvailableFilters ? 'Ocultar buscador completo' : 'Buscar más candidatos'}
                           </button>
-                        ) : null}
 
-                        {item.candidaturaId ? (
-                          <button
-                            type="button"
-                            className="button button-secondary button-small button-danger"
-                            onClick={() => void handleRemoveCandidate(item)}
-                            disabled={busyRemovalId === item.candidaturaId}
-                          >
-                            {busyRemovalId === item.candidaturaId ? 'Eliminando...' : 'Eliminar'}
-                          </button>
-                        ) : null}
-                      </div>
-                    </div>
-                  );})
-                ) : (
-                  <div className="selection-empty">Todavía no hay candidatos añadidos al proceso.</div>
-                )}
-              </div>
-            </article>
+                          {showAvailableFilters ? (
+                            <>
+                              <form className="selection-filter-panel" onSubmit={handleSearchSubmit} style={{ marginBottom: '0.75rem' }}>
+                                <label>
+                                  <span>Buscar por nombre, email o tecnologías</span>
+                                  <input
+                                    type="search"
+                                    placeholder="Ej. Java, React..."
+                                    value={searchTerm}
+                                    onChange={(event) => setSearchTerm(event.target.value)}
+                                  />
+                                </label>
+                                <div className="selection-filter-actions">
+                                  <button type="submit" className="button button-secondary button-small">
+                                    Buscar
+                                  </button>
+                                </div>
+                              </form>
 
-            <article className="card selection-column">
-              <div className="selection-column-header">
-                <div>
-                  <h3>Solicitudes de visibilidad</h3>
-                  <p>Solicitudes pendientes, rechazadas o aceptadas por el profesional.</p>
-                </div>
-                <span className="badge">{visibleCounts.solicitudes}</span>
-              </div>
-
-              <div className="selection-list">
-                {board?.solicitudesVisibilidad.length ? (
-                  board.solicitudesVisibilidad.map((item) => {
-                    const cardKey = `solicitud-${item.candidaturaId ?? item.profesionalId}`;
-                    const detailsOpen = Boolean(expandedDetailCards[cardKey]);
-
-                    return (
-                    <div key={item.candidaturaId ?? item.profesionalId} className="selection-item">
-                      <div>
-                        <div className="selection-item-header">
-                          <strong>{item.displayName}</strong>
-                          <span className="status-chip status-chip-visibility">
-                            {mapVisibilityState(item.solicitudVisibilidad)}
-                          </span>
+                              <div className="selection-list">
+                                {filteredAvailableProfessionals.length ? (
+                                  filteredAvailableProfessionals.map((item) => {
+                                    const cardKey = `disponible-${puesto.id}-${item.profesionalId}`;
+                                    const detailsOpen = Boolean(expandedDetailCards[cardKey]);
+                                    return (
+                                      <div key={item.profesionalId} className="selection-item">
+                                        <div>
+                                          <div className="selection-item-header">
+                                            <strong>{item.displayName}</strong>
+                                            <span className="status-chip status-chip-neutral">Anónimo</span>
+                                          </div>
+                                          <p>{renderCollapsedSummary(item)}</p>
+                                          {detailsOpen ? renderDetails(item) : null}
+                                        </div>
+                                        <div className="selection-item-actions">
+                                          <button
+                                            type="button"
+                                            className="button button-secondary button-small"
+                                            onClick={() => handleOpenDetails(item, cardKey)}
+                                          >
+                                            {detailsOpen ? 'Ocultar detalles' : 'Ver detalles'}
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="button button-secondary button-small"
+                                            onClick={() => {
+                                              setPendingAddCandidate(item);
+                                              setSelectedPuestoId(puesto.id);
+                                            }}
+                                            disabled={busyCandidateId === item.profesionalId}
+                                          >
+                                            {busyCandidateId === item.profesionalId ? 'Añadiendo...' : 'Añadir'}
+                                          </button>
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                ) : searchTerm.trim() ? (
+                                  <div className="selection-empty">No hay resultados para esa búsqueda.</div>
+                                ) : (
+                                  <div className="selection-empty">Escribe algo para buscar candidatos.</div>
+                                )}
+                              </div>
+                            </>
+                          ) : null}
                         </div>
-                        <p>{renderCollapsedSummary(item)}</p>
-                        <p className="selection-item-muted">
-                          Estado candidatura: {mapCandidateState(item.estado)}
-                        </p>
-                        <p className="selection-item-muted">
-                          Puesto invitado: {item.puesto?.titulo || 'No indicado'}
-                        </p>
-                        {detailsOpen ? renderDetails(item) : null}
-                      </div>
+                      </article>
 
-                      <div className="selection-item-actions">
-                        <button
-                          type="button"
-                          className="button button-secondary button-small"
-                          onClick={() => handleOpenDetails(item, cardKey)}
-                        >
-                          {isIdentityVisible(item)
-                            ? 'Ver detalles'
-                            : detailsOpen
-                              ? 'Ocultar detalles'
-                              : 'Ver detalles'}
-                        </button>
-                        {item.anonimo ? <span className="status-chip status-chip-neutral">Anónimo</span> : null}
-                      </div>
+                      {/* ── Candidatos solicitados para este puesto ── */}
+                      <article className="card selection-column">
+                        <div className="selection-column-header">
+                          <div>
+                            <h3>Candidatos solicitados</h3>
+                            <p>Profesionales invitados a este puesto.</p>
+                          </div>
+                          <span className="badge">{candidatosDePuesto.length}</span>
+                        </div>
+
+                        <div className="selection-list">
+                          {candidatosDePuesto.length ? (
+                            candidatosDePuesto.map((item) => {
+                              const cardKey = `candidato-${item.candidaturaId ?? item.profesionalId}`;
+                              const detailsOpen = Boolean(expandedDetailCards[cardKey]);
+                              return (
+                                <div key={item.candidaturaId ?? item.profesionalId} className="selection-item">
+                                  <div>
+                                    <div className="selection-item-header">
+                                      <strong>{item.displayName}</strong>
+                                      <span className="status-chip status-chip-state">{mapCandidateState(item.estado)}</span>
+                                    </div>
+                                    <p>{renderCollapsedSummary(item)}</p>
+                                    <p className="selection-item-muted">
+                                      {mapVisibilityState(item.solicitudVisibilidad)} · {formatExperience(item.aniosExperiencia)}
+                                    </p>
+                                    {detailsOpen ? renderDetails(item) : null}
+                                  </div>
+                                  <div className="selection-item-actions">
+                                    <button
+                                      type="button"
+                                      className="button button-secondary button-small"
+                                      onClick={() => handleOpenDetails(item, cardKey)}
+                                    >
+                                      {isIdentityVisible(item) ? 'Ver detalles' : detailsOpen ? 'Ocultar detalles' : 'Ver detalles'}
+                                    </button>
+                                    {item.solicitudVisibilidad === 'NO_SOLICITADO' && item.candidaturaId ? (
+                                      <button
+                                        type="button"
+                                        className="button button-secondary button-small"
+                                        onClick={() => void handleRequestVisibility(item)}
+                                        disabled={busyCandidateId === item.candidaturaId || item.estado !== 'ACEPTADO'}
+                                        title={item.estado !== 'ACEPTADO' ? 'Solo puedes solicitar visibilidad cuando el candidato acepte la candidatura.' : undefined}
+                                      >
+                                        {busyCandidateId === item.candidaturaId ? 'Solicitando...' : 'Visibilidad'}
+                                      </button>
+                                    ) : null}
+                                    {item.candidaturaId ? (
+                                      <button
+                                        type="button"
+                                        className="button button-secondary button-small button-danger"
+                                        onClick={() => void handleRemoveCandidate(item)}
+                                        disabled={busyRemovalId === item.candidaturaId}
+                                      >
+                                        {busyRemovalId === item.candidaturaId ? 'Eliminando...' : 'Eliminar'}
+                                      </button>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="selection-empty">Todavía no hay candidatos añadidos a este puesto.</div>
+                          )}
+                        </div>
+                      </article>
+
+                      {/* ── Solicitudes de visibilidad para este puesto ── */}
+                      <article className="card selection-column">
+                        <div className="selection-column-header">
+                          <div>
+                            <h3>Solicitudes de visibilidad</h3>
+                            <p>Solicitudes pendientes, rechazadas o aceptadas.</p>
+                          </div>
+                          <span className="badge">{solicitudesDePuesto.length}</span>
+                        </div>
+
+                        <div className="selection-list">
+                          {solicitudesDePuesto.length ? (
+                            solicitudesDePuesto.map((item) => {
+                              const cardKey = `solicitud-${item.candidaturaId ?? item.profesionalId}`;
+                              const detailsOpen = Boolean(expandedDetailCards[cardKey]);
+                              return (
+                                <div key={item.candidaturaId ?? item.profesionalId} className="selection-item">
+                                  <div>
+                                    <div className="selection-item-header">
+                                      <strong>{item.displayName}</strong>
+                                      <span className="status-chip status-chip-visibility">
+                                        {mapVisibilityState(item.solicitudVisibilidad)}
+                                      </span>
+                                    </div>
+                                    <p>{renderCollapsedSummary(item)}</p>
+                                    <p className="selection-item-muted">
+                                      Estado candidatura: {mapCandidateState(item.estado)}
+                                    </p>
+                                    {detailsOpen ? renderDetails(item) : null}
+                                  </div>
+                                  <div className="selection-item-actions">
+                                    <button
+                                      type="button"
+                                      className="button button-secondary button-small"
+                                      onClick={() => handleOpenDetails(item, cardKey)}
+                                    >
+                                      {isIdentityVisible(item) ? 'Ver detalles' : detailsOpen ? 'Ocultar detalles' : 'Ver detalles'}
+                                    </button>
+                                    {item.anonimo ? <span className="status-chip status-chip-neutral">Anónimo</span> : null}
+                                  </div>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="selection-empty">No hay solicitudes de visibilidad para este puesto.</div>
+                          )}
+                        </div>
+                      </article>
                     </div>
-                  );})
-                ) : (
-                  <div className="selection-empty">No hay solicitudes de visibilidad todavía.</div>
-                )}
-              </div>
-            </article>
-          </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
 
           {visibleDetailsModalItem ? (
             <div
@@ -702,23 +773,16 @@ export function SelectionPage() {
           {pendingAddCandidate ? (
             <div className="confirm-overlay" role="dialog" aria-modal="true" onClick={handleCloseAddCandidate}>
               <article className="card confirm-card" onClick={(event) => event.stopPropagation()}>
-                <h3>Seleccionar puesto para invitación</h3>
+                <h3>Confirmar invitación</h3>
                 <p>
                   Profesional: <strong>{pendingAddCandidate.displayName}</strong>
                 </p>
-
-                <label>
-                  <span>Puesto del proceso</span>
-                  <select value={selectedPuestoId} onChange={(event) => setSelectedPuestoId(event.target.value)}>
-                    <option value="">Selecciona un puesto</option>
-                    {(board?.puestos ?? []).map((puesto) => (
-                      <option key={puesto.id} value={puesto.id}>
-                        {puesto.titulo} ({puesto.senioridad})
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
+                <p>
+                  Puesto:{' '}
+                  <strong>
+                    {board?.puestos.find((p) => p.id === selectedPuestoId)?.titulo ?? 'No seleccionado'}
+                  </strong>
+                </p>
                 <div className="page-actions">
                   <button type="button" className="button button-secondary" onClick={handleCloseAddCandidate}>
                     Cancelar

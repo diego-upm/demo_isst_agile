@@ -3,10 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../../components/common/PageHeader';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { PATHS } from '../../../routes/paths';
-import { createProceso, getMyRrhhContext, type NivelConfidencialidad } from '../services/processService';
+import {
+  createProceso,
+  getMyRrhhContext,
+  type CandidatoSugerido,
+  type NivelConfidencialidad,
+} from '../services/processService';
 import { BUSINESS_AREA_OPTIONS, type BusinessAreaValue, getBusinessAreaLabel } from '../../professional/types/businessAreas';
 
-type Senioridad = 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD';
+
 
 interface ProcessFormData {
   titulo: string;
@@ -17,7 +22,6 @@ interface ProcessFormData {
 
 interface PositionDraft {
   puestoTitulo: string;
-  puestoSenioridad: Senioridad;
   puestoModalidad: string;
   puestoUbicacion: string;
   puestoArea: string;
@@ -36,7 +40,6 @@ const DEFAULT_FORM: ProcessFormData = {
 
 const DEFAULT_POSITION: PositionDraft = {
   puestoTitulo: '',
-  puestoSenioridad: 'SENIOR',
   puestoModalidad: '',
   puestoUbicacion: '',
   puestoArea: '',
@@ -45,6 +48,94 @@ const DEFAULT_POSITION: PositionDraft = {
   puestoTipoContrato: '',
   puestoSectorRequerido: '',
 };
+
+function mapDisponibilidad(d?: string | null): string {
+  if (d === 'AVAILABLE') return 'Disponible';
+  if (d === 'OPEN_TO_OFFERS') return 'Abierto a ofertas';
+  if (d === 'NOT_AVAILABLE') return 'No disponible';
+  return 'No indicado';
+}
+
+interface SuggestedCandidatesProps {
+  candidates: CandidatoSugerido[];
+  procesoId: string;
+  onGoToSelection: () => void;
+  onGoToProcesses: () => void;
+}
+
+function SuggestedCandidates({ candidates, procesoId, onGoToSelection, onGoToProcesses }: SuggestedCandidatesProps) {
+  return (
+    <section>
+      <PageHeader
+        title="Proceso creado"
+        description="Hemos seleccionado los mejores candidatos disponibles para tu proceso."
+      />
+
+      <div className="alert alert-success" style={{ marginBottom: '1.5rem' }}>
+        El proceso se ha creado correctamente.
+      </div>
+
+      {candidates.length === 0 ? (
+        <div className="card">
+          <p>
+            <strong>No hay candidatos disponibles</strong> que encajen con este proceso en este momento. Puedes
+            acceder al buscador de profesionales desde la pantalla de selección.
+          </p>
+        </div>
+      ) : (
+        <>
+          <p style={{ marginBottom: '1rem' }}>
+            Estos son los <strong>{candidates.length} candidato{candidates.length > 1 ? 's' : ''}</strong> que
+            mejor se adaptan al perfil del proceso:
+          </p>
+
+          <div className="list-stack">
+            {candidates.map((c, index) => (
+              <article key={c.profesionalId} className="card">
+                <div className="card-row">
+                  <div>
+                    <div className="selection-item-header">
+                      <strong>{c.displayName}</strong>
+                      <span className="badge">#{index + 1}</span>
+                    </div>
+                    {c.aniosExperiencia != null && (
+                      <p>{c.aniosExperiencia} años de experiencia</p>
+                    )}
+                    {c.areaNegocio && (
+                      <p className="selection-item-muted">
+                        Área: {getBusinessAreaLabel(c.areaNegocio as BusinessAreaValue)}
+                      </p>
+                    )}
+                    {c.tecnologiasClave && (
+                      <p className="selection-item-muted">
+                        Tecnologías: {c.tecnologiasClave}
+                      </p>
+                    )}
+                    {c.disponibilidad && (
+                      <p className="selection-item-muted">
+                        Disponibilidad: {mapDisponibilidad(c.disponibilidad)}
+                      </p>
+                    )}
+                  </div>
+                  <span className="status-chip status-chip-neutral">Anónimo</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="page-actions" style={{ marginTop: '1.5rem' }}>
+        <button type="button" className="button" onClick={onGoToSelection}>
+          Ir a la selección del proceso
+        </button>
+        <button type="button" className="button button-secondary" onClick={onGoToProcesses}>
+          Ver todos los procesos
+        </button>
+      </div>
+    </section>
+  );
+}
 
 export function CreateProcessPage() {
   const navigate = useNavigate();
@@ -55,7 +146,10 @@ export function CreateProcessPage() {
   const [isAddPositionOpen, setIsAddPositionOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+
+  // After creation
+  const [createdProcesoId, setCreatedProcesoId] = useState<string | null>(null);
+  const [suggestedCandidates, setSuggestedCandidates] = useState<CandidatoSugerido[] | null>(null);
 
   function handleAddPosition() {
     if (!positionForm.puestoTitulo.trim()) {
@@ -76,7 +170,6 @@ export function CreateProcessPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setSuccess(null);
 
     if (!token) {
       setError('No hay sesion activa para crear procesos.');
@@ -94,7 +187,7 @@ export function CreateProcessPage() {
         return;
       }
 
-      await createProceso(token, {
+      const result = await createProceso(token, {
         empresaClienteId: rrhhContext.empresaClienteId,
         responsableRrhhId: rrhhContext.id,
         titulo: form.titulo.trim(),
@@ -103,7 +196,7 @@ export function CreateProcessPage() {
         nivelExperienciaMinimo: form.nivelExperienciaMinimo.trim() || undefined,
         puestos: positions.map((position) => ({
           titulo: position.puestoTitulo.trim(),
-          senioridad: position.puestoSenioridad,
+          senioridad: 'SENIOR',
           modalidad: position.puestoModalidad.trim() || undefined,
           ubicacion: position.puestoUbicacion.trim() || undefined,
           area: position.puestoArea.trim() || undefined,
@@ -114,16 +207,25 @@ export function CreateProcessPage() {
         })),
       });
 
-      setSuccess('Proceso creado correctamente.');
-      setForm(DEFAULT_FORM);
-      setPositionForm(DEFAULT_POSITION);
-      setPositions([]);
-      setIsAddPositionOpen(false);
+      setCreatedProcesoId(result.proceso.id);
+      setSuggestedCandidates(result.candidatosSugeridos);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo crear el proceso.');
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  // Show suggestions screen after creation
+  if (createdProcesoId !== null && suggestedCandidates !== null) {
+    return (
+      <SuggestedCandidates
+        candidates={suggestedCandidates}
+        procesoId={createdProcesoId}
+        onGoToSelection={() => navigate(`${PATHS.rrhhSelection}?processId=${createdProcesoId}`)}
+        onGoToProcesses={() => navigate(PATHS.rrhhProcesses)}
+      />
+    );
   }
 
   return (
@@ -201,18 +303,6 @@ export function CreateProcessPage() {
               />
             </label>
 
-            <label>
-              <span>Senioridad</span>
-              <select
-                value={positionForm.puestoSenioridad}
-                onChange={(event) => setPositionForm((current) => ({ ...current, puestoSenioridad: event.target.value as Senioridad }))}
-              >
-                <option value="JUNIOR">Junior</option>
-                <option value="MID">Mid</option>
-                <option value="SENIOR">Senior</option>
-                <option value="LEAD">Lead</option>
-              </select>
-            </label>
 
             <label>
               <span>Modalidad</span>
@@ -305,7 +395,7 @@ export function CreateProcessPage() {
                   <div>
                     <h4>{position.puestoTitulo}</h4>
                     <p>
-                      {position.puestoSenioridad} · {position.puestoModalidad || 'Modalidad no indicada'} ·{' '}
+                      {position.puestoModalidad || 'Modalidad no indicada'} ·{' '}
                       {position.puestoUbicacion || 'Ubicación no indicada'}
                     </p>
                     <p className="selection-item-muted">
@@ -324,7 +414,6 @@ export function CreateProcessPage() {
         )}
 
         {error ? <div className="alert alert-error">{error}</div> : null}
-        {success ? <div className="alert alert-success">{success}</div> : null}
 
         <button type="submit" className="button" disabled={isSubmitting}>
           {isSubmitting ? 'Creando proceso...' : 'Crear proceso'}
