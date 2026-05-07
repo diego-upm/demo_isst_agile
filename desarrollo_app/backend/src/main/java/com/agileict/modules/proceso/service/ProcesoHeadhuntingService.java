@@ -87,7 +87,7 @@ public class ProcesoHeadhuntingService {
         }
 
         ProcesoHeadhunting saved = procesoHeadhuntingRepository.save(proceso);
-        var sugeridos = candidatosSugeridosService.getSuggestions(saved);
+        var sugeridos = candidatosSugeridosService.getSuggestionsByPuesto(saved);
 
         return new CreateProcesoWithSuggestionsResponse(toResponse(saved), sugeridos);
     }

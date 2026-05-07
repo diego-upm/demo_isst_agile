@@ -73,11 +73,16 @@ public class ListaCandidatosService {
                 .map(this::toResponse)
                 .toList();
 
-        // candidatosSugeridos: always the top matches, excluding already added candidates
-        List<ListaCandidatosResponse> sugeridos = candidatosSugeridosService.getSuggestions(proceso)
-                .stream()
-                .filter(s -> !candidaturasPorProfesional.containsKey(s.profesionalId()))
-                .toList();
+        // candidatosSugeridosPorPuesto: top matches per puesto, excluding already added candidates
+        Map<UUID, List<ListaCandidatosResponse>> sugeridosPorPuesto = candidatosSugeridosService
+                .getSuggestionsByPuesto(proceso)
+                .entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().stream()
+                                .filter(s -> !candidaturasPorProfesional.containsKey(s.profesionalId()))
+                                .toList()
+                ));
 
         // profesionalesDisponibles: only populated when there is an active search
         List<ListaCandidatosResponse> profesionalesDisponibles;
@@ -109,7 +114,7 @@ public class ListaCandidatosService {
                         puesto.getSectorRequerido()
                     ))
                     .toList(),
-                sugeridos,
+                sugeridosPorPuesto,
                 profesionalesDisponibles,
                 candidatos,
                 solicitudesVisibilidad

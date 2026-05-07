@@ -38,6 +38,7 @@ export interface ProcesoResponse {
   titulo?: string;
   descripcion?: string;
   estado?: 'ACTIVE' | 'IN_SELECTION' | 'CLOSED' | 'CANCELLED';
+  puestos?: Array<{ id: string; titulo: string }>;
 }
 
 export interface CandidatoSugerido {
@@ -54,7 +55,7 @@ export interface CandidatoSugerido {
 
 export interface CreateProcesoResponse {
   proceso: ProcesoResponse;
-  candidatosSugeridos: CandidatoSugerido[];
+  candidatosSugeridosPorPuesto: Record<string, CandidatoSugerido[]>;
 }
 
 export async function getMyRrhhContext(token: string): Promise<ResponsableRrhhMeResponse> {

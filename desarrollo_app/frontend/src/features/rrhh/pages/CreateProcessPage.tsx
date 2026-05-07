@@ -57,25 +57,31 @@ function mapDisponibilidad(d?: string | null): string {
 }
 
 interface SuggestedCandidatesProps {
-  candidates: CandidatoSugerido[];
+  candidatosSugeridosPorPuesto: Record<string, CandidatoSugerido[]>;
+  puestos: Array<{ id: string; titulo: string }>;
   procesoId: string;
   onGoToSelection: () => void;
   onGoToProcesses: () => void;
 }
 
-function SuggestedCandidates({ candidates, procesoId, onGoToSelection, onGoToProcesses }: SuggestedCandidatesProps) {
+function SuggestedCandidates({ candidatosSugeridosPorPuesto, puestos, procesoId, onGoToSelection, onGoToProcesses }: SuggestedCandidatesProps) {
+  const [activePuestoId, setActivePuestoId] = useState<string>(puestos[0]?.id ?? '');
+
+  const totalCandidates = Object.values(candidatosSugeridosPorPuesto).reduce((acc, list) => acc + list.length, 0);
+  const activeCandidates = candidatosSugeridosPorPuesto[activePuestoId] ?? [];
+
   return (
     <section>
       <PageHeader
         title="Proceso creado"
-        description="Hemos seleccionado los mejores candidatos disponibles para tu proceso."
+        description="Hemos seleccionado los mejores candidatos para cada puesto."
       />
 
       <div className="alert alert-success" style={{ marginBottom: '1.5rem' }}>
         El proceso se ha creado correctamente.
       </div>
 
-      {candidates.length === 0 ? (
+      {totalCandidates === 0 ? (
         <div className="card">
           <p>
             <strong>No hay candidatos disponibles</strong> que encajen con este proceso en este momento. Puedes
@@ -84,44 +90,85 @@ function SuggestedCandidates({ candidates, procesoId, onGoToSelection, onGoToPro
         </div>
       ) : (
         <>
-          <p style={{ marginBottom: '1rem' }}>
-            Estos son los <strong>{candidates.length} candidato{candidates.length > 1 ? 's' : ''}</strong> que
-            mejor se adaptan al perfil del proceso:
-          </p>
-
-          <div className="list-stack">
-            {candidates.map((c, index) => (
-              <article key={c.profesionalId} className="card">
-                <div className="card-row">
-                  <div>
-                    <div className="selection-item-header">
-                      <strong>{c.displayName}</strong>
-                      <span className="badge">#{index + 1}</span>
-                    </div>
-                    {c.aniosExperiencia != null && (
-                      <p>{c.aniosExperiencia} años de experiencia</p>
-                    )}
-                    {c.areaNegocio && (
-                      <p className="selection-item-muted">
-                        Área: {getBusinessAreaLabel(c.areaNegocio as BusinessAreaValue)}
-                      </p>
-                    )}
-                    {c.tecnologiasClave && (
-                      <p className="selection-item-muted">
-                        Tecnologías: {c.tecnologiasClave}
-                      </p>
-                    )}
-                    {c.disponibilidad && (
-                      <p className="selection-item-muted">
-                        Disponibilidad: {mapDisponibilidad(c.disponibilidad)}
-                      </p>
-                    )}
-                  </div>
-                  <span className="status-chip status-chip-neutral">Anónimo</span>
-                </div>
-              </article>
-            ))}
+          {/* Tabs por puesto */}
+          <div
+            style={{
+              display: 'flex',
+              gap: '0.5rem',
+              flexWrap: 'wrap',
+              borderBottom: '2px solid var(--color-border, #333)',
+              marginBottom: '1.25rem',
+            }}
+          >
+            {puestos.map((puesto) => {
+              const isActive = activePuestoId === puesto.id;
+              const count = (candidatosSugeridosPorPuesto[puesto.id] ?? []).length;
+              return (
+                <button
+                  key={puesto.id}
+                  type="button"
+                  onClick={() => setActivePuestoId(puesto.id)}
+                  style={{
+                    padding: '0.6rem 1.1rem',
+                    border: 'none',
+                    borderBottom: isActive ? '2px solid var(--color-primary, #6366f1)' : '2px solid transparent',
+                    marginBottom: '-2px',
+                    background: 'none',
+                    color: isActive ? 'var(--color-primary, #6366f1)' : 'var(--color-text-muted, #aaa)',
+                    fontWeight: isActive ? 700 : 400,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    fontSize: '0.95rem',
+                  }}
+                >
+                  {puesto.titulo}
+                  {count > 0 && <span className="badge">{count}</span>}
+                </button>
+              );
+            })}
           </div>
+
+          {activeCandidates.length === 0 ? (
+            <div className="card">
+              <p>No hay candidatos recomendados para este puesto.</p>
+            </div>
+          ) : (
+            <div className="list-stack">
+              {activeCandidates.map((c, index) => (
+                <article key={c.profesionalId} className="card">
+                  <div className="card-row">
+                    <div>
+                      <div className="selection-item-header">
+                        <strong>{c.displayName}</strong>
+                        <span className="badge">#{index + 1}</span>
+                      </div>
+                      {c.aniosExperiencia != null && (
+                        <p>{c.aniosExperiencia} años de experiencia</p>
+                      )}
+                      {c.areaNegocio && (
+                        <p className="selection-item-muted">
+                          Área: {getBusinessAreaLabel(c.areaNegocio as BusinessAreaValue)}
+                        </p>
+                      )}
+                      {c.tecnologiasClave && (
+                        <p className="selection-item-muted">
+                          Tecnologías: {c.tecnologiasClave}
+                        </p>
+                      )}
+                      {c.disponibilidad && (
+                        <p className="selection-item-muted">
+                          Disponibilidad: {mapDisponibilidad(c.disponibilidad)}
+                        </p>
+                      )}
+                    </div>
+                    <span className="status-chip status-chip-neutral">Anónimo</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </>
       )}
 
@@ -149,7 +196,8 @@ export function CreateProcessPage() {
 
   // After creation
   const [createdProcesoId, setCreatedProcesoId] = useState<string | null>(null);
-  const [suggestedCandidates, setSuggestedCandidates] = useState<CandidatoSugerido[] | null>(null);
+  const [suggestedCandidates, setSuggestedCandidates] = useState<Record<string, CandidatoSugerido[]> | null>(null);
+  const [createdPuestos, setCreatedPuestos] = useState<Array<{ id: string; titulo: string }>>([]);
 
   function handleAddPosition() {
     if (!positionForm.puestoTitulo.trim()) {
@@ -208,7 +256,8 @@ export function CreateProcessPage() {
       });
 
       setCreatedProcesoId(result.proceso.id);
-      setSuggestedCandidates(result.candidatosSugeridos);
+      setSuggestedCandidates(result.candidatosSugeridosPorPuesto);
+      setCreatedPuestos(result.proceso.puestos ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo crear el proceso.');
     } finally {
@@ -220,7 +269,8 @@ export function CreateProcessPage() {
   if (createdProcesoId !== null && suggestedCandidates !== null) {
     return (
       <SuggestedCandidates
-        candidates={suggestedCandidates}
+        candidatosSugeridosPorPuesto={suggestedCandidates}
+        puestos={createdPuestos}
         procesoId={createdProcesoId}
         onGoToSelection={() => navigate(`${PATHS.rrhhSelection}?processId=${createdProcesoId}`)}
         onGoToProcesses={() => navigate(PATHS.rrhhProcesses)}

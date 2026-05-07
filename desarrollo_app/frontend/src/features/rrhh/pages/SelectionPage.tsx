@@ -105,7 +105,9 @@ export function SelectionPage() {
 
   const visibleCounts = useMemo(
     () => ({
-      sugeridos: board?.candidatosSugeridos.length ?? 0,
+      sugeridos: board
+        ? Object.values(board.candidatosSugeridosPorPuesto).reduce((acc, list) => acc + list.length, 0)
+        : 0,
       candidatos: board?.candidatos.length ?? 0,
       solicitudes: board?.solicitudesVisibilidad.length ?? 0,
     }),
@@ -477,12 +479,12 @@ export function SelectionPage() {
                             <h3>Candidatos recomendados</h3>
                             <p>Los mejores perfiles según el sistema.</p>
                           </div>
-                          <span className="badge">{board.candidatosSugeridos.length}</span>
+                          <span className="badge">{(board.candidatosSugeridosPorPuesto[puesto.id] ?? []).length}</span>
                         </div>
 
                         <div className="selection-list" style={{ marginBottom: '1.25rem' }}>
-                          {board.candidatosSugeridos.length ? (
-                            board.candidatosSugeridos.map((item, index) => {
+                          {(board.candidatosSugeridosPorPuesto[puesto.id] ?? []).length ? (
+                            (board.candidatosSugeridosPorPuesto[puesto.id] ?? []).map((item, index) => {
                               const cardKey = `sugerido-${puesto.id}-${item.profesionalId}`;
                               const detailsOpen = Boolean(expandedDetailCards[cardKey]);
                               return (

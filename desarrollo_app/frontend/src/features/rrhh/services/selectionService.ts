@@ -62,7 +62,7 @@ export interface SelectionBoardResponse {
     tipoContrato: string | null;
     sectorRequerido: string | null;
   }>;
-  candidatosSugeridos: SelectionBoardItemResponse[];
+  candidatosSugeridosPorPuesto: Record<string, SelectionBoardItemResponse[]>;
   profesionalesDisponibles: SelectionBoardItemResponse[];
   candidatos: SelectionBoardItemResponse[];
   solicitudesVisibilidad: SelectionBoardItemResponse[];
