@@ -37,6 +37,16 @@ export interface RegisterRrhhPayload {
   password: string;
 }
 
+export interface RegisterCompanyPayload {
+  empresaNombre: string;
+  cif: string;
+  sector?: string;
+  responsableNombre: string;
+  responsableApellidos: string;
+  responsableEmail: string;
+  password: string;
+}
+
 export interface CompanyOption {
   id: string;
   nombre: string;
@@ -111,12 +121,12 @@ export async function registerRrhhWithBackend(payload: RegisterRrhhPayload): Pro
   await apiClient.post<LoginApiResponse>('/v1/auth/register-rrhh', payload);
 }
 
-export async function listCompaniesWithBackend(): Promise<CompanyOption[]> {
-  return apiClient.get<CompanyOption[]>('/v1/auth/companies');
+export async function registerCompanyWithBackend(payload: RegisterCompanyPayload): Promise<void> {
+  await apiClient.post<LoginApiResponse>('/v1/auth/register-company', payload);
 }
 
-export async function createCompanyWithBackend(payload: CreateCompanyPayload): Promise<CompanyOption> {
-  return apiClient.post<CompanyOption>('/v1/auth/companies', payload);
+export async function listCompaniesWithBackend(): Promise<CompanyOption[]> {
+  return apiClient.get<CompanyOption[]>('/v1/auth/companies');
 }
 
 export function getStoredSession(): AuthSession | null {

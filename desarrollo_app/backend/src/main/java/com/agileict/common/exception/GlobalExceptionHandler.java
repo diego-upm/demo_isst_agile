@@ -7,12 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -37,14 +39,14 @@ public class GlobalExceptionHandler {
         List<String> details = ex.getBindingResult()
                 .getAllErrors()
                 .stream()
-                .map(error -> error instanceof FieldError fe ? fe.getField() + ": " + fe.getDefaultMessage() : error.getDefaultMessage())
+                .map(this::validationDetail)
                 .toList();
         return build(HttpStatus.BAD_REQUEST, "La petición contiene datos no válidos.", details, request.getRequestURI());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGeneric(Exception ex, HttpServletRequest request) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Se ha producido un error interno.", List.of(ex.getMessage()), request.getRequestURI());
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Se ha producido un error interno.", List.of(), request.getRequestURI());
     }
 
     private ResponseEntity<ApiErrorResponse> build(HttpStatus status, String message, List<String> details, String path) {
@@ -58,5 +60,14 @@ public class GlobalExceptionHandler {
                         path
                 )
         );
+    }
+
+    private String validationDetail(ObjectError error) {
+        if (error == null) {
+            return "Valor no válido";
+        }
+
+        String message = Objects.toString(error.getDefaultMessage(), "Valor no válido");
+        return error instanceof FieldError fieldError ? fieldError.getField() + ": " + message : message;
     }
 }

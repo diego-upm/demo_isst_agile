@@ -1,5 +1,11 @@
 package com.agileict.modules.proceso.service;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.agileict.common.exception.BusinessException;
 import com.agileict.common.exception.ResourceNotFoundException;
 import com.agileict.common.util.SecurityUtils;
@@ -14,11 +20,6 @@ import com.agileict.modules.proceso.repository.ProcesoHeadhuntingRepository;
 import com.agileict.modules.puesto.entity.PuestoTIC;
 import com.agileict.modules.responsable.entity.ResponsableRrhh;
 import com.agileict.modules.responsable.repository.ResponsableRrhhRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
 
 @Service
 public class ProcesoHeadhuntingService {
@@ -40,6 +41,17 @@ public class ProcesoHeadhuntingService {
 
     @Transactional(readOnly = true)
     public List<ProcesoHeadhuntingResponse> findAll() {
+        if (!SecurityUtils.currentUserHasRole("ROLE_ADMIN")) {
+            String email = SecurityUtils.currentUserEmail();
+            ResponsableRrhh responsable = responsableRrhhRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("No tienes permisos para consultar procesos."));
+
+            return procesoHeadhuntingRepository.findByEmpresaClienteId(responsable.getEmpresaCliente().getId())
+                .stream()
+                .map(this::toResponse)
+                .toList();
+        }
+
         return procesoHeadhuntingRepository.findAll()
                 .stream()
                 .map(this::toResponse)
@@ -48,6 +60,8 @@ public class ProcesoHeadhuntingService {
 
     @Transactional(readOnly = true)
     public List<ProcesoHeadhuntingResponse> findByEmpresa(UUID empresaClienteId) {
+        ensureCanAccessEmpresa(empresaClienteId, "No tienes permisos para consultar procesos de esta empresa.");
+
         return procesoHeadhuntingRepository.findByEmpresaClienteId(empresaClienteId)
                 .stream()
                 .map(this::toResponse)
@@ -61,6 +75,20 @@ public class ProcesoHeadhuntingService {
 
         ResponsableRrhh responsable = responsableRrhhRepository.findById(request.responsableRrhhId())
                 .orElseThrow(() -> new ResourceNotFoundException("No existe el responsable RRHH indicado."));
+
+        if (!responsable.getEmpresaCliente().getId().equals(empresa.getId())) {
+            throw new BusinessException("El responsable RRHH no pertenece a la empresa indicada.");
+        }
+
+        if (!SecurityUtils.currentUserHasRole("ROLE_ADMIN")) {
+            String email = SecurityUtils.currentUserEmail();
+            ResponsableRrhh currentResponsable = responsableRrhhRepository.findByEmail(email)
+                    .orElseThrow(() -> new BusinessException("No tienes permisos para crear procesos."));
+
+            if (!currentResponsable.getId().equals(responsable.getId())) {
+                throw new BusinessException("No puedes crear procesos en nombre de otro responsable RRHH.");
+            }
+        }
 
         ProcesoHeadhunting proceso = new ProcesoHeadhunting();
         proceso.setEmpresaCliente(empresa);
@@ -111,6 +139,20 @@ public class ProcesoHeadhuntingService {
         }
 
         procesoHeadhuntingRepository.delete(proceso);
+    }
+
+    private void ensureCanAccessEmpresa(UUID empresaClienteId, String errorMessage) {
+        if (SecurityUtils.currentUserHasRole("ROLE_ADMIN")) {
+            return;
+        }
+
+        String email = SecurityUtils.currentUserEmail();
+        ResponsableRrhh responsable = responsableRrhhRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(errorMessage));
+
+        if (!responsable.getEmpresaCliente().getId().equals(empresaClienteId)) {
+            throw new BusinessException(errorMessage);
+        }
     }
 
     private ProcesoHeadhuntingResponse toResponse(ProcesoHeadhunting proceso) {

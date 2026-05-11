@@ -11,7 +11,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -49,7 +48,12 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/v1/auth/register-professional").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/v1/auth/register-company").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/v1/auth/register-rrhh").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/auth/companies").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/v1/auth/companies").hasAnyRole("RRHH", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/profesionales").hasAnyRole("RRHH", "ADMIN")
                         .requestMatchers("/api/v1/profesionales/me").hasAnyRole("PROFESSIONAL", "ADMIN")
                         .requestMatchers("/api/v1/profesionales/me/**").hasAnyRole("PROFESSIONAL", "ADMIN")
@@ -61,8 +65,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .httpBasic(Customizer.withDefaults());
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

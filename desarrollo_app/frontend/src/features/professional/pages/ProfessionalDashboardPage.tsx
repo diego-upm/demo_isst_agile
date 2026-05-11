@@ -12,11 +12,18 @@ import {
 } from '../services/visibilityRequestsService';
 import type { SelectionBoardItemResponse } from '../../rrhh/services/selectionService';
 
-function mapVisibilityState(state?: string | null): string {
-  if (state === 'ACEPTADO') return 'Identidad visible';
-  if (state === 'RECHAZADO') return 'Identidad rechazada';
-  if (state === 'SOLICITADO') return 'Identidad solicitada';
-  return 'Sin solicitud';
+function mapVisibilityRequestState(state?: string | null): string {
+  if (state === 'ACEPTADO') return 'Aceptada';
+  if (state === 'RECHAZADO') return 'Rechazada';
+  if (state === 'SOLICITADO') return 'Pendiente de respuesta';
+  return 'No solicitada';
+}
+
+function mapVisibilityProfileState(state?: string | null): string {
+  if (state === 'ACEPTADO') return 'Identidad del perfil visible';
+  if (state === 'RECHAZADO') return 'Visibilidad del perfil rechazada';
+  if (state === 'SOLICITADO') return 'Visibilidad del perfil solicitada';
+  return 'Visibilidad del perfil oculta';
 }
 
 function mapCandidateState(state?: string | null): string {
@@ -238,10 +245,17 @@ export function ProfessionalDashboardPage() {
                     <strong>{request.procesoTitulo || 'Proceso sin título'}</strong>
                     <span className="status-chip status-chip-state">{mapCandidateState(request.estado)}</span>
                   </div>
-                  <p>{request.tecnologiasClave || 'Tecnologías no indicadas'}</p>
+                  {request.puesto ? (
+                    <p><strong>Puesto:</strong> {request.puesto.titulo}</p>
+                  ) : null}
+                  {request.puesto?.sectorRequerido ? (
+                    <p className="selection-item-muted"><strong>Sector requerido:</strong> {request.puesto.sectorRequerido}</p>
+                  ) : null}
                   <p className="selection-item-muted">
-                    Visibilidad: {mapVisibilityState(request.solicitudVisibilidad)} ·{' '}
-                    {request.anonimo ? 'Identidad oculta' : 'Identidad visible'}
+                    <strong>Estado de solicitud:</strong> {mapVisibilityRequestState(request.solicitudVisibilidad)}.
+                  </p>
+                  <p className="selection-item-muted">
+                    <strong>Estado de visibilidad:</strong> {mapVisibilityProfileState(request.solicitudVisibilidad)}.
                   </p>
                 </div>
 
@@ -335,8 +349,12 @@ export function ProfessionalDashboardPage() {
                 <dd>{mapCandidateState(visibleDetailsModalItem.estado)}</dd>
               </div>
               <div>
-                <dt>Visibilidad</dt>
-                <dd>{mapVisibilityState(visibleDetailsModalItem.solicitudVisibilidad)}</dd>
+                <dt>Estado de solicitud</dt>
+                <dd>{mapVisibilityRequestState(visibleDetailsModalItem.solicitudVisibilidad)}</dd>
+              </div>
+              <div>
+                <dt>Estado de visibilidad</dt>
+                <dd>{mapVisibilityProfileState(visibleDetailsModalItem.solicitudVisibilidad)}</dd>
               </div>
             </dl>
 

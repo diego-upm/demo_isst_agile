@@ -1,5 +1,16 @@
 package com.agileict.modules.candidatura.service;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.agileict.common.exception.BusinessException;
 import com.agileict.common.exception.ResourceNotFoundException;
 import com.agileict.common.util.SecurityUtils;
@@ -21,16 +32,6 @@ import com.agileict.modules.responsable.entity.ResponsableRrhh;
 import com.agileict.modules.responsable.repository.ResponsableRrhhRepository;
 import com.agileict.shared.enums.EstadoListaCandidato;
 import com.agileict.shared.enums.EstadoSolicitudVisibilidad;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class ListaCandidatosService {
@@ -59,8 +60,9 @@ public class ListaCandidatosService {
         String normalizedSearch = normalizeSearch(search);
 
         List<ListaCandidatos> candidaturas = listaCandidatosRepository.findByProcesoId(procesoId);
-        Map<UUID, ListaCandidatos> candidaturasPorProfesional = candidaturas.stream()
-                .collect(Collectors.toMap(candidatura -> candidatura.getProfesional().getId(), Function.identity()));
+        Set<UUID> profesionalesYaAsociados = candidaturas.stream()
+            .map(candidatura -> candidatura.getProfesional().getId())
+            .collect(Collectors.toSet());
 
         List<ListaCandidatosResponse> candidatos = candidaturas.stream()
                 .sorted(Comparator.comparing(ListaCandidatos::getFechaInclusion).reversed())
@@ -80,7 +82,7 @@ public class ListaCandidatosService {
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         e -> e.getValue().stream()
-                                .filter(s -> !candidaturasPorProfesional.containsKey(s.profesionalId()))
+                            .filter(s -> !profesionalesYaAsociados.contains(s.profesionalId()))
                                 .toList()
                 ));
 
@@ -89,7 +91,7 @@ public class ListaCandidatosService {
         if (normalizedSearch != null) {
             profesionalesDisponibles = profesionalSeniorRepository.searchActiveProfessionals(normalizedSearch)
                     .stream()
-                    .filter(profesional -> !candidaturasPorProfesional.containsKey(profesional.getId()))
+                    .filter(profesional -> !profesionalesYaAsociados.contains(profesional.getId()))
                     .sorted(Comparator.comparing(ProfesionalSenior::getApellidos).thenComparing(ProfesionalSenior::getNombre))
                     .map(this::toAvailableResponse)
                     .toList();

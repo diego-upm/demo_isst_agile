@@ -1,5 +1,14 @@
 package com.agileict.modules.auth.service;
 
+import java.time.LocalDate;
+import java.util.Set;
+import java.util.UUID;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
 import com.agileict.modules.auth.entity.Role;
 import com.agileict.modules.auth.entity.UserAccount;
 import com.agileict.modules.auth.repository.RoleRepository;
@@ -17,17 +26,9 @@ import com.agileict.shared.enums.DisponibilidadProfesional;
 import com.agileict.shared.enums.EstadoSuscripcion;
 import com.agileict.shared.enums.PlanSuscripcion;
 import com.agileict.shared.enums.RoleName;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
-
-import java.time.LocalDate;
-import java.util.Set;
-import java.util.UUID;
 
 @Component
-@Profile({"dev", "docker"})
+@Profile("dev")
 public class DemoDataInitializer implements CommandLineRunner {
 
     private final RoleRepository roleRepository;

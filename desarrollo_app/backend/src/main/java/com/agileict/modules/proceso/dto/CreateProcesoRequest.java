@@ -1,12 +1,14 @@
 package com.agileict.modules.proceso.dto;
 
-import com.agileict.shared.enums.NivelConfidencialidad;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
 import java.util.List;
 import java.util.UUID;
+
+import com.agileict.shared.enums.NivelConfidencialidad;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 public record CreateProcesoRequest(
         @NotNull UUID empresaClienteId,
@@ -15,6 +17,6 @@ public record CreateProcesoRequest(
         @NotBlank String descripcion,
         @NotNull NivelConfidencialidad nivelConfidencialidad,
         String nivelExperienciaMinimo,
-        @Valid List<PuestoTicRequest> puestos
+        @NotEmpty @Valid List<PuestoTicRequest> puestos
 ) {
 }

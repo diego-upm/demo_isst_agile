@@ -5,9 +5,14 @@ export interface ApiClientOptions extends RequestInit {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 async function parseResponse<T>(response: Response): Promise<T> {
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   const contentType = response.headers.get('content-type') || '';
   const isJson = contentType.includes('application/json');
-  const payload = isJson ? await response.json() : await response.text();
+  const responseText = await response.text();
+  const payload = isJson && responseText ? JSON.parse(responseText) : responseText;
 
   if (!response.ok) {
     const message =
